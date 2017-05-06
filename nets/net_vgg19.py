@@ -75,7 +75,7 @@ class VGG19:
         self.conv5_4 = self.conv_layer(self.conv5_3, 512, 512, "conv5_4")
         self.pool5 = self.max_pool(self.conv5_4, 'pool5')
 
-        self.fc6 = self.fc_layer(self.pool5, 25088, 4096, "fc6")  # 25088 = ((224 // (2 ** 5)) ** 2) * 512
+        self.fc6 = self.fc_layer(self.pool5, 25088, 4096, "fc6", load_weight_force=True) # 25088 = ((224 // (2 ** 5)) ** 2) * 512
         self.relu6 = tf.nn.relu(self.fc6)
 
         # DROPOUT
@@ -141,27 +141,27 @@ class VGG19:
         return var
 
     # Layer FullConnected
-    def fc_layer(self, bottom, in_size, out_size, name):
+    def fc_layer(self, bottom, in_size, out_size, name, load_weight_force=False):
         with tf.variable_scope(name):
-            weights, biases = self.get_fc_var(in_size, out_size, name)
+            weights, biases = self.get_fc_var(in_size, out_size, name, load_weight_force)
 
             x = tf.reshape(bottom, [-1, in_size])
             fc = tf.nn.bias_add(tf.matmul(x, weights), biases)
             return fc
 
     # Generate Parameter FullConnect layer
-    def get_fc_var(self, in_size, out_size, name):
+    def get_fc_var(self, in_size, out_size, name, load_wf=False):
         initial_value = tf.truncated_normal([in_size, out_size], 0.0, 0.001)
-        weights = self.get_var_fc(initial_value, name, 0, name + "_weights")
+        weights = self.get_var_fc(initial_value, name, 0, name + "_weights", load_wf)
 
         initial_value = tf.truncated_normal([out_size], .0, .001)
-        biases = self.get_var_fc(initial_value, name, 1, name + "_biases")
+        biases = self.get_var_fc(initial_value, name, 1, name + "_biases", load_wf)
 
         return weights, biases
 
     # Construct dictionary with random parameters or load parameters
-    def get_var_fc(self, initial_value, name, idx, var_name):
-        if self.data_dict is not None and name in self.data_dict and self.load_weight_fc is True:
+    def get_var_fc(self, initial_value, name, idx, var_name, load_wf=False):
+        if self.data_dict is not None and name in self.data_dict and (self.load_weight_fc is True or load_wf is True):
             value = self.data_dict[name][idx]
         else:
             value = initial_value

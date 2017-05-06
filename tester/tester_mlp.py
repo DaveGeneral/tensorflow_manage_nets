@@ -15,9 +15,9 @@ if switch_server is True:
     from nets import net_mlperceptron as MLP
     from tools.dataset_csv import Dataset_csv
 else:
-    from tensorflow_manage_nets2.tools import utils
-    from tensorflow_manage_nets2.nets import net_mlperceptron as MLP
-    from tensorflow_manage_nets2.tools.dataset_csv import Dataset_csv
+    from tensorflow_manage_nets.tools import utils
+    from tensorflow_manage_nets.nets import net_mlperceptron as MLP
+    from tensorflow_manage_nets.tools.dataset_csv import Dataset_csv
 
 # ..................................................................
 

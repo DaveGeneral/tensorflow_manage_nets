@@ -14,8 +14,8 @@ if switch_server is True:
     from tools import utils
     from nets import net_aencoder as AE
 else:
-    from tensorflow_manage_nets2.tools import utils
-    from tensorflow_manage_nets2.nets import net_aencoder as AE
+    from tensorflow_manage_nets.tools import utils
+    from tensorflow_manage_nets.nets import net_aencoder as AE
 # ..................................................................
 
 

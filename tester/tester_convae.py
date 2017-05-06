@@ -15,9 +15,9 @@ if switch_server is True:
     from nets import net_conv_aencoder as CAE
     from tools.dataset_csv import Dataset_csv
 else:
-    from tensorflow_manage_nets2.tools import utils
-    from tensorflow_manage_nets2.nets import net_conv_aencoder as CAE
-    from tensorflow_manage_nets2.tools.dataset_csv import Dataset_csv
+    from tensorflow_manage_nets.tools import utils
+    from tensorflow_manage_nets.nets import net_conv_aencoder as CAE
+    from tensorflow_manage_nets.tools.dataset_csv import Dataset_csv
 
 # ..................................................................
 
@@ -88,7 +88,7 @@ if __name__ == '__main__':
     path_save_weight = '../weight/saveCAE_1.npy'
 
     mini_batch_train = 34
-    mini_batch_test = 50
+    mini_batch_test = 30
     epoch = 10
     learning_rate = 0.0001
 

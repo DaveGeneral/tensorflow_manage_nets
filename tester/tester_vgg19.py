@@ -25,9 +25,9 @@ if switch_server is True:
     from nets import net_vgg19 as vgg19
     from tools.dataset_image import Dataset
 else:
-    from tensorflow_manage_nets2.tools import utils
-    from tensorflow_manage_nets2.nets import net_vgg19 as vgg19
-    from tensorflow_manage_nets2.tools.dataset_image import Dataset
+    from tensorflow_manage_nets.tools import utils
+    from tensorflow_manage_nets.nets import net_vgg19 as vgg19
+    from tensorflow_manage_nets.tools.dataset_image import Dataset
 
 # ..................................................................
 
@@ -60,8 +60,8 @@ def test_model(net, sess_test, objData):
         prob, layer = sess_test.run([net.prob, net.relu6], feed_dict={vgg_batch: batch, train_mode: False})
 
         # save output of a layer
-        # utils.save_layer_output(layer, label, name='Train_SNC4_relu6')
-        # utils.save_layer_output_by_class(layer, label, name='Train_SNC4')
+        # utils.save_layer_output(layer, label, name='Train_SNC4_relu6', dir='../data/features/')
+        # utils.save_layer_output_by_class(layer, label, name='Train_SNC4', dir='../data/features/')
 
         # Acumulamos los aciertos de cada iteracion, para despues hacer un promedio
         count, count_by_class, prob_predicted = utils.print_accuracy(label, prob, matrix_confusion=count_by_class, predicted=prob_predicted)
@@ -141,20 +141,20 @@ if __name__ == '__main__':
 
         # Execute Network
         test_model(net=vgg, sess_test=sess, objData=data_test)
-        train_model(net=vgg, sess_train=sess, objData=data_train, epoch=epoch)
-        accuracy = test_model(net=vgg, sess_test=sess, objData=data_test)
-
-        # SAVE LOG: Genera un registro en el archivo log-server.txt
-        utils.write_log(total_data=data_train.total_images,
-                        epoch=epoch,
-                        m_batch=mini_batch_train,
-                        l_rate=learning_rate,
-                        accuracy=accuracy,
-                        file_npy=path_load_weight,
-                        extra=str(size_layer_fc))
-
-        # SAVE WEIGHTs
-        vgg.save_npy(sess, path_save_weight)
+        # train_model(net=vgg, sess_train=sess, objData=data_train, epoch=epoch)
+        # accuracy = test_model(net=vgg, sess_test=sess, objData=data_test)
+        #
+        # # SAVE LOG: Genera un registro en el archivo log-server.txt
+        # utils.write_log(total_data=data_train.total_images,
+        #                 epoch=epoch,
+        #                 m_batch=mini_batch_train,
+        #                 l_rate=learning_rate,
+        #                 accuracy=accuracy,
+        #                 file_npy=path_load_weight,
+        #                 extra=str(size_layer_fc))
+        #
+        # # SAVE WEIGHTs
+        # vgg.save_npy(sess, path_save_weight)
 
 
 

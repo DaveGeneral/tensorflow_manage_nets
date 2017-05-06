@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 switch_server = True
 
-testdir = os.path.dirname(__file__)
+testdir = os.path.dirname('__file__')
 srcdir = '..'
 sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 

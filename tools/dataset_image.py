@@ -103,7 +103,7 @@ class Dataset:
     def next_batch(self):
 
         # es positivo cuando se llega al ultimo batch
-        if (self.end / self.total_images) == 1 or ((self.total_inputs-self.end)/self.minibatch) < 1:
+        if (self.end / self.total_images) == 1 or ((self.total_images-self.end)/self.minibatch) < 1:
             # inicializa los indices y reordena la posicion de las imagenes
             self.start = 0
             self.end = self.minibatch

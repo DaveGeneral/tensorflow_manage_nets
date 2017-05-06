@@ -16,7 +16,7 @@ import numpy as np
 
 switch_server = True
 
-testdir = os.path.dirname(__file__)
+testdir = os.path.dirname('__file__')
 srcdir = '..'
 sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 
@@ -141,20 +141,20 @@ if __name__ == '__main__':
 
         # Execute Network
         test_model(net=vgg, sess_test=sess, objData=data_test)
-        # train_model(net=vgg, sess_train=sess, objData=data_train, epoch=epoch)
-        # accuracy = test_model(net=vgg, sess_test=sess, objData=data_test)
-        #
-        # # SAVE LOG: Genera un registro en el archivo log-server.txt
-        # utils.write_log(total_data=data_train.total_images,
-        #                 epoch=epoch,
-        #                 m_batch=mini_batch_train,
-        #                 l_rate=learning_rate,
-        #                 accuracy=accuracy,
-        #                 file_npy=path_load_weight,
-        #                 extra=str(size_layer_fc))
-        #
-        # # SAVE WEIGHTs
-        # vgg.save_npy(sess, path_save_weight)
+        train_model(net=vgg, sess_train=sess, objData=data_train, epoch=epoch)
+        accuracy = test_model(net=vgg, sess_test=sess, objData=data_test)
+
+        # SAVE LOG: Genera un registro en el archivo log-server.txt
+        utils.write_log(total_data=data_train.total_images,
+                        epoch=epoch,
+                        m_batch=mini_batch_train,
+                        l_rate=learning_rate,
+                        accuracy=accuracy,
+                        file_npy=path_load_weight,
+                        extra=str(size_layer_fc))
+
+        # SAVE WEIGHTs
+        vgg.save_npy(sess, path_save_weight)
 
 
 

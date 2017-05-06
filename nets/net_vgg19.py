@@ -89,7 +89,7 @@ class VGG19:
         if self.trainable is True:
             self.relu7 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu7, self.dropout), lambda: self.relu7)
 
-        self.fc8 = self.fc_layer(self.relu7, size_layer_fc, num_class, "2c8")
+        self.fc8 = self.fc_layer(self.relu7, size_layer_fc, num_class, "fc8")
         self.prob = tf.nn.softmax(self.fc8, name="prob")
 
         # COST - TRAINING
@@ -161,7 +161,7 @@ class VGG19:
 
     # Construct dictionary with random parameters or load parameters
     def get_var_fc(self, initial_value, name, idx, var_name, load_wf=False):
-        if self.data_dict is not None and name in self.data_dict and (self.load_weight_fc is True or load_wf is True):
+        if self.data_dict is not None and name in self.data_dict and ((self.load_weight_fc is True) or (load_wf is True)):
             value = self.data_dict[name][idx]
         else:
             value = initial_value

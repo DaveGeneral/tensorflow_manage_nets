@@ -54,7 +54,7 @@ def test_model(net, sess_test, objData):
     prob_predicted = []
 
     print('\n# PHASE: Test classification')
-    for i in range(objData.total_batchs_complete):
+    for i in range(3):
 
         batch, label = objData.generate_batch()
         prob, layer = sess_test.run([net.prob, net.relu6], feed_dict={vgg_batch: batch, train_mode: False})
@@ -112,13 +112,13 @@ if __name__ == '__main__':
 
     path_load_weight = '../weight/vgg19.npy'
     path_save_weight = '../weight/save_1.npy'
+    load_weight_fc = True
 
     epoch = 40
     mini_batch_train = 20
     mini_batch_test = 30
     learning_rate = 0.0005
 
-    load_weight_fc = False
     size_layer_fc = 1536
     accuracy = 0
 

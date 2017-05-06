@@ -23,11 +23,8 @@ else:
 
 
 # GLOBAL VARIABLES
-path = '../data/features/'
-# path_data_train = [path+'SKINfeaturesA_Test.csv']
-# path_data_test = [path+'SKINfeaturesA_Train.csv']
-num_class = 2
 
+num_class = 2
 
 # ..................................................................
 
@@ -97,8 +94,9 @@ def train_model(net, sess_train, objData, epoch):
 #                   son tres fuentes de datos
 
 OPC = 'A'
-# ..................................................................
 
+# ..................................................................
+path = '../data/features/muestra'+OPC+'/'
 path_data_train = [path + 'SKINfeatures'+OPC+'_Train.csv']
 path_data_test = [path + 'SKINfeatures'+OPC+'_Test.csv']
 path_load_weight = None
@@ -110,7 +108,7 @@ if __name__ == '__main__':
     mini_batch_train = 20
     mini_batch_test = 30
     learning_rate = 0.0001
-    epoch = 20
+    epoch = 10
 
     # GENERATE DATA
     # Datos de media y valor maximo

@@ -87,3 +87,8 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+*.npy
+data/MNIST_data
+log-server.txt
+data/features/*.csv

@@ -37,7 +37,6 @@ path_dir_image_train = path + "image_train_complete/"
 path_dir_image_test = path + "image_test_complete/"
 path_data_train = path + 'ISB_Train_complete.csv'
 path_data_test = path + 'ISB_Test_complete.csv'
-num_class = 2
 
 # VALIDATE INPUT DATA
 assert os.path.exists(path), 'No existe el directorio de datos ' + path
@@ -50,7 +49,7 @@ def test_model(net, sess_test, objData):
 
     total = objData.total_images
     count_success = 0
-    count_by_class = np.zeros([num_class, num_class])
+    count_by_class = np.zeros([net.num_class, net.num_class])
     prob_predicted = []
 
     print('\n# PHASE: Test classification')
@@ -112,7 +111,8 @@ if __name__ == '__main__':
 
     path_load_weight = '../weight/vgg19.npy'
     path_save_weight = '../weight/save_1.npy'
-    load_weight_fc = True
+    load_weight_fc = False
+    num_class = 2
 
     epoch = 40
     mini_batch_train = 20
@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
         # Initialize of the model VGG19
         vgg = vgg19.VGG19(path_load_weight, learning_rate=learning_rate, load_weight_fc=load_weight_fc)
-        vgg.build(vgg_batch, vgg_label, train_mode, size_layer_fc=size_layer_fc, num_class=2)
+        vgg.build(vgg_batch, vgg_label, train_mode, size_layer_fc=size_layer_fc, num_class=num_class)
         sess.run(tf.global_variables_initializer())
 
         # Execute Network

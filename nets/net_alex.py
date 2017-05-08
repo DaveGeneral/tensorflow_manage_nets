@@ -23,31 +23,32 @@ class VGG19:
         self.dropout = dropout
         self.load_weight_fc = load_weight_fc
 
-    def build(self, rgb, target, train_mode=True, size_layer_fc=4096, num_class=1000):
+    def build(self, rgb, target, train_mode=True, last_layers=[128, 10]):
+        """
+        load variable from npy to build the vgg
 
-        #
-        # 2-D is CONVERTED TO SQUARE TENSOR.
-        # ---------------------------------
+        :param rgb: rgb image [batch, height, width, 3] values scaled [0, 1]
+        :param target: label image [#clases]
+        :param train_mode: a bool tensor, usually a placeholder: if True, dropout will be turned on
+        :param size_layer_fc: size of the last layer classification by default vgg19 use 4096
+        """
+        self.num_class = last_layers[1]
 
-        if len(rgb.get_shape()) == 2:
-            x_dim = int(np.sqrt(rgb.get_shape().as_list()[1]))
-            x_tensor = tf.reshape(rgb, [-1, x_dim, x_dim, 1])
-
-
-        x_tensor = tf.image.resize_images(x_tensor, [224, 224])
-        xdim = 224
         start_time = time.time()
         print("build model started")
         rgb_scaled = rgb * 255.0
 
         # Convert RGB to BGR
+        red, green, blue = tf.split(axis=3, num_or_size_splits=3, value=rgb_scaled)
+        assert red.get_shape().as_list()[1:] == [224, 224, 1]
+        assert green.get_shape().as_list()[1:] == [224, 224, 1]
+        assert blue.get_shape().as_list()[1:] == [224, 224, 1]
         bgr = tf.concat(axis=3, values=[
-            x_tensor,
-            x_tensor,
-            x_tensor,
+            blue - VGG_MEAN[0],
+            green - VGG_MEAN[1],
+            red - VGG_MEAN[2],
         ])
-
-        assert bgr.get_shape().as_list()[1:] == [xdim, xdim, 3]
+        assert bgr.get_shape().as_list()[1:] == [224, 224, 3]
 
         self.conv1_1 = self.conv_layer(bgr, 3, 64, "conv1_1")
         self.conv1_2 = self.conv_layer(self.conv1_1, 64, 64, "conv1_2")
@@ -89,10 +90,10 @@ class VGG19:
         if self.trainable is True:
             self.relu7 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu7, self.dropout), lambda: self.relu7)
 
-        self.fc8 = self.fc_layer(self.relu7, 4096, 128, "fc8")
+        self.fc8 = self.fc_layer(self.relu7, 4096, last_layers[0], "fc8")
         self.relu8 = tf.nn.relu(self.fc8)
 
-        self.fc9 = self.fc_layer(self.relu7, 128, 10, "fc9")
+        self.fc9 = self.fc_layer(self.relu8, last_layers[0], last_layers[1], "fc9")
         self.prob = tf.nn.softmax(self.fc9, name="prob")
 
         # COST - TRAINING

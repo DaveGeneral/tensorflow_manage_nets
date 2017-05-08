@@ -32,6 +32,7 @@ class VGG19:
         :param train_mode: a bool tensor, usually a placeholder: if True, dropout will be turned on
         :param size_layer_fc: size of the last layer classification by default vgg19 use 4096
         """
+        self.num_class = num_class
 
         start_time = time.time()
         print("build model started")

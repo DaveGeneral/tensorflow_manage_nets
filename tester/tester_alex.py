@@ -22,22 +22,31 @@ sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 
 if switch_server is True:
     from tools import utils
-    from nets import net_alex as ALEX
+    from nets import net_alex as vgg19
     from tools.dataset_image import Dataset
 else:
     from tensorflow_manage_nets.tools import utils
-    from tensorflow_manage_nets.nets import net_alex as ALEX
+    from tensorflow_manage_nets.nets import net_alex as vgg19
     from tensorflow_manage_nets.tools.dataset_image import Dataset
 
 # ..................................................................
+# path = '../../data/ISB2016/'
+# path_dir_image_train = path + "image_train_complete/"
+# path_dir_image_test = path + "image_test_complete/"
+# path_data_train = path + 'ISB_Train_complete.csv'
+# path_data_test = path + 'ISB_Test_complete.csv'
+#
+# # VALIDATE INPUT DATA
+# assert os.path.exists(path), 'No existe el directorio de datos ' + path
+# assert os.path.exists(path_data_train), 'No existe el archivo con los datos de entrenamiento ' + path_data_train
+# assert os.path.exists(path_data_test), 'No existe el archivo con los datos de pruebas ' + path_data_test
 
 # GLOBAL VARIABLES
-path = '../../data/ISB2016/'
-path_dir_image_train = path + "image_train_complete/"
-path_dir_image_test = path + "image_test_complete/"
-path_data_train = path + 'ISB_Train_complete.csv'
-path_data_test = path + 'ISB_Test_complete.csv'
-num_class = 10
+path = '../../data/CIFAR_10/'
+path_dir_image_train = path + "train_cifar10_original/"
+path_dir_image_test = path + "test_cifar10_original/"
+path_data_train = path + 'cifar10_train_label.csv'
+path_data_test = path + 'cifar10_test_label.csv'
 
 # VALIDATE INPUT DATA
 assert os.path.exists(path), 'No existe el directorio de datos ' + path
@@ -50,18 +59,18 @@ def test_model(net, sess_test, objData):
 
     total = objData.total_images
     count_success = 0
-    count_by_class = np.zeros([num_class, num_class])
+    count_by_class = np.zeros([net.num_class, net.num_class])
     prob_predicted = []
 
     print('\n# PHASE: Test classification')
     for i in range(3):
 
         batch, label = objData.generate_batch()
-        prob, layer = sess_test.run([net.prob, net.relu6], feed_dict={vgg_batch: batch, train_mode: False})
+        prob, layer = sess_test.run([net.prob, net.fc8], feed_dict={vgg_batch: batch, train_mode: False})
 
         # save output of a layer
-        # utils.save_layer_output(layer, label, name='Train_SNC4_relu6', dir='../data/features/')
-        # utils.save_layer_output_by_class(layer, label, name='Train_SNC4', dir='../data/features/')
+        # utils.save_layer_output(layer, label, name='layer_128', dir='../data/features/')
+        # utils.save_layer_output_by_class(layer, label, name='layer_128', dir='../data/features/')
 
         # Acumulamos los aciertos de cada iteracion, para despues hacer un promedio
         count, count_by_class, prob_predicted = utils.print_accuracy(label, prob, matrix_confusion=count_by_class, predicted=prob_predicted)
@@ -90,7 +99,7 @@ def train_model(net, sess_train, objData, epoch):
             batch, label = objData.generate_batch()
 
             # Generate the 'one hot' or labels
-            label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=num_class)
+            label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=net.num_class)
             label = list(sess_train.run(label))
             # Run training
             t_start = time.time()
@@ -108,21 +117,20 @@ def train_model(net, sess_train, objData, epoch):
         print("        Time per iteration: %7.3f seg." % ((t1 - t0) / epoch))
 
 
-
-
-
 if __name__ == '__main__':
 
+    # LOad y save  weights
     path_load_weight = '../weight/vgg19.npy'
-    path_save_weight = '../weight/save_1.npy'
+    path_save_weight = '../weight/save_cifar.npy'
     load_weight_fc = False
 
-    epoch = 4
+    # Ultimas capas de la red
+    last_layers = [128, 10]
+
+    epoch = 40
     mini_batch_train = 20
     mini_batch_test = 30
     learning_rate = 0.0005
-
-    size_layer_fc = 4096
     accuracy = 0
 
     # GENERATE DATA
@@ -132,43 +140,32 @@ if __name__ == '__main__':
 
     with tf.Session() as sess:
 
-        import tensorflow.examples.tutorials.mnist.input_data as input_data
-        mnist = input_data.read_data_sets("../data/MNIST_data/", one_hot=True)
-        trX, trY, teX, teY = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
-
         # DEFINE MODEL
-        vgg_batch = tf.placeholder(tf.float32, [None, 784])
-        vgg_label = tf.placeholder(tf.float32, [None, num_class])
+        vgg_batch = tf.placeholder(tf.float32, [None, 224, 224, 3])
+        vgg_label = tf.placeholder(tf.float32, [None, last_layers[1]])
         train_mode = tf.placeholder(tf.bool)
 
         # Initialize of the model VGG19
-        alex = ALEX.VGG19(path_load_weight, learning_rate=learning_rate, load_weight_fc=load_weight_fc)
-        alex.build(vgg_batch, vgg_label, train_mode, size_layer_fc=size_layer_fc, num_class=10)
+        vgg = vgg19.VGG19(path_load_weight, learning_rate=learning_rate, load_weight_fc=load_weight_fc)
+        vgg.build(vgg_batch, vgg_label, train_mode, last_layers=last_layers)
         sess.run(tf.global_variables_initializer())
-        total = len(trX)
-        # Train red
-        for i in range(epoch):
-            for start, end in zip(range(0, total, 128), range(128, total, 128)):
-                print('[',start, end,']')
-                input_ = trX[start:end]
-                label_ = trY[start:end]
-                sess.run(alex.train, feed_dict={vgg_batch: input_, vgg_label: label_, train_mode:True})
-
-            print(i, sess.run(alex.cost, feed_dict={vgg_batch: mnist.test.images, vgg_label: mnist.test.labels, train_mode: False}))
 
         # # Execute Network
-        # test_model(net=alex, sess_test=sess, objData=data_test)
-        # train_model(net=alex, sess_train=sess, objData=data_train, epoch=epoch)
-        # accuracy = test_model(net=alex, sess_test=sess, objData=data_test)
-        #
-        # # SAVE LOG: Genera un registro en el archivo log-server.txt
-        # utils.write_log(total_data=data_train.total_images,
-        #                 epoch=epoch,
-        #                 m_batch=mini_batch_train,
-        #                 l_rate=learning_rate,
-        #                 accuracy=accuracy,
-        #                 file_npy=path_load_weight,
-        #                 extra=str(size_layer_fc))
-        #
-        # # SAVE WEIGHTs
-        # vgg.save_npy(sess, path_save_weight)
+        test_model(net=vgg, sess_test=sess, objData=data_test)
+        train_model(net=vgg, sess_train=sess, objData=data_train, epoch=epoch)
+        accuracy = test_model(net=vgg, sess_test=sess, objData=data_test)
+
+        # SAVE LOG: Genera un registro en el archivo log-server.txt
+        utils.write_log(total_data=data_train.total_images,
+                        epoch=epoch,
+                        m_batch=mini_batch_train,
+                        l_rate=learning_rate,
+                        accuracy=accuracy,
+                        file_npy=path_load_weight,
+                        extra=str(last_layers))
+
+        # SAVE WEIGHTs
+        vgg.save_npy(sess, path_save_weight)
+
+
+

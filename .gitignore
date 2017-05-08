@@ -94,3 +94,4 @@ log-server.txt
 data/features/*/*.csv
 data/features/*.csv
 ipynb
+alex/

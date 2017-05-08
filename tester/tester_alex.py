@@ -63,7 +63,7 @@ def test_model(net, sess_test, objData):
     prob_predicted = []
 
     print('\n# PHASE: Test classification')
-    for i in range(3):
+    for i in range(objData.total_batchs_complete):
 
         batch, label = objData.generate_batch()
         prob, layer = sess_test.run([net.prob, net.fc8], feed_dict={vgg_batch: batch, train_mode: False})
@@ -134,9 +134,9 @@ if __name__ == '__main__':
     accuracy = 0
 
     # GENERATE DATA
-    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], restrict=True)
-    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, 1], random=False)
-    # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], random=False)
+    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], restrict=True, xtype='.png')
+    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, 1], random=False, xtype='.png')
+    # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], random=False, xtype='.png')
 
     with tf.Session() as sess:
 

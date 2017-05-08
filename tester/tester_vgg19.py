@@ -53,7 +53,7 @@ def test_model(net, sess_test, objData):
     prob_predicted = []
 
     print('\n# PHASE: Test classification')
-    for i in range(3):
+    for i in range(objData.total_batchs_complete):
 
         batch, label = objData.generate_batch()
         prob, layer = sess_test.run([net.prob, net.relu6], feed_dict={vgg_batch: batch, train_mode: False})
@@ -89,7 +89,7 @@ def train_model(net, sess_train, objData, epoch):
             batch, label = objData.generate_batch()
 
             # Generate the 'one hot' or labels
-            label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=num_class)
+            label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=net.num_class)
             label = list(sess_train.run(label))
             # Run training
             t_start = time.time()
@@ -140,7 +140,7 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
 
         # Execute Network
-        test_model(net=vgg, sess_test=sess, objData=data_test)
+        # test_model(net=vgg, sess_test=sess, objData=data_test)
         train_model(net=vgg, sess_train=sess, objData=data_train, epoch=epoch)
         accuracy = test_model(net=vgg, sess_test=sess, objData=data_test)
 

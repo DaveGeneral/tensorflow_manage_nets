@@ -41,7 +41,7 @@ class Dataset:
         random: Si es true automaticamente de reordenara al definir el objeto 'Dataset'
     """
 
-    def __init__(self, path_data='', path_dir_images='', minibatch=25, cols=[], restrict=False, random=True):
+    def __init__(self, path_data='', path_dir_images='', minibatch=25, cols=[], restrict=False, random=True, xtype=".jpg"):
 
         assert os.path.exists(path_data), 'No existe el archivo con los datos de entrada ' + path_data
 
@@ -49,6 +49,7 @@ class Dataset:
         self.dir_images = path_dir_images
         self.minibatch = minibatch
         self.cols = cols
+        self.type = xtype
 
         # leemos el archivo csv y guardamos las columnas 0 y 2 (nombre de imagen y etiqueta respectivamente)
         data = pd.read_csv(path_data, header=None)
@@ -90,7 +91,7 @@ class Dataset:
         # cargamos las imagenes y estas son tratadas para darles el tamaño requerido
         for i in range(start, end):
             # print(self.images[i], i)
-            img = utils.load_image(self.dir_images + self.images[i] + '.jpg')[:, :, :3]
+            img = utils.load_image(self.dir_images + self.images[i] + self.type)[:, :, :3]
             batch_list.append(img.reshape((1, 224, 224, 3)))
             label_list.append(self.labels[i])
 

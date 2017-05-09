@@ -3,6 +3,7 @@ import tensorflow as tf
 import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
 
 switch_server = True
 
@@ -22,20 +23,12 @@ else:
 # ..................................................................
 
 
-# GLOBAL VARIABLES
-
-num_class = 2
-
-# ..................................................................
-
-
 # Función, fase de test
-def test_model(net, sess_test, objData):
+def test_model(net, sess_test, objData, plot_roc=False):
 
-    total = objData.total_inputs
     count_success = 0
-    count_by_class = np.zeros([num_class, num_class])
     prob_predicted = []
+    plot_predicted = []
 
     # Iteraciones por Batch, en cada iteracion la session de tensorflow procesa los 'n' datos de entrada
     print('\n# PHASE: Test classification')
@@ -45,21 +38,17 @@ def test_model(net, sess_test, objData):
         prob = sess_test.run(net.net['prob'], feed_dict={mlp_batch: batch, train_mode: False})
 
         # Acumulamos la presicion de cada iteracion, para despues hacer un promedio
-        count, count_by_class, prob_predicted = utils.print_accuracy(label, prob, matrix_confusion=count_by_class, predicted=prob_predicted)
+        count, prob_predicted, plot_predicted = utils.process_prob(label, prob, predicted=prob_predicted, plot_predicted=plot_predicted)
         count_success = count_success + count
         objData.next_batch_test()
 
     # promediamos la presicion total
-    accuracy_final = count_success/total
-    print('\n# STATUS: Confusion Matrix')
-    print(count_by_class)
-    print('    Success total: ', str(count_success))
-    print('    Accuracy total: ', str(accuracy_final))
-
-    # a = objData.labels.tolist()
-    # b = prob_predicted
-    # cm = confusion_matrix(a, b)
-    return accuracy_final
+    print('\n# STATUS:')
+    y_true = objData.labels
+    y_prod = prob_predicted
+    print(prob_predicted)
+    accuracy_total = utils.metrics(y_true, y_prod, plot_predicted, plot_roc)
+    return accuracy_total
 
 
 # Funcion, fase de entrenamiento
@@ -74,7 +63,7 @@ def train_model(net, sess_train, objData, epoch):
             batch, label = objData.generate_batch()
 
             # Generate the 'one hot' or labels
-            label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=num_class)
+            label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=net.num_class)
             label = list(sess_train.run(label))
             # Run training
             t_start = time.time()
@@ -108,7 +97,8 @@ if __name__ == '__main__':
     mini_batch_train = 20
     mini_batch_test = 30
     learning_rate = 0.0001
-    epoch = 10
+    epoch = 4
+    num_class = 2
 
     # GENERATE DATA
     # Datos de media y valor maximo
@@ -133,7 +123,7 @@ if __name__ == '__main__':
 
         test_model(MLP, sess_test=sess, objData=data_test)
         train_model(MLP, sess_train=sess, objData=data_train, epoch=epoch)
-        accuracy = test_model(MLP, sess_test=sess, objData=data_test)
+        accuracy = test_model(MLP, sess_test=sess, objData=data_test, plot_roc=True)
 
         # # SAVE WEIGHTs
         MLP.save_npy(sess, path_save_weight)

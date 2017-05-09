@@ -26,7 +26,6 @@ else:
 path = '../data/features/'
 path_data_train = [path+'SKINfeaturesA_Test.csv']
 path_data_test = [path+'SKINfeaturesA_Train.csv']
-num_class = 2
 
 # ..................................................................
 
@@ -36,7 +35,7 @@ def test_model(net, sess_test, objData):
 
     total = objData.total_inputs
     count_success = 0
-    count_by_class = np.zeros([num_class, num_class])
+    count_by_class = np.zeros([net.num_class, net.num_class])
     prob_predicted = []
 
     # Iteraciones por Batch, en cada iteracion la session de tensorflow procesa los 'n' datos de entrada
@@ -79,7 +78,7 @@ def train_model(net, sess_train, objData, epoch):
             batch, label = objData.generate_batch()
 
             # Generate the 'one hot' or labels
-            label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=num_class)
+            label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=net.num_class)
             label = list(sess_train.run(label))
             # Run training
             t_start = time.time()
@@ -108,6 +107,7 @@ if __name__ == '__main__':
     mini_batch_test = 30
     epoch = 10
     learning_rate = 0.00005
+    num_class = 2
 
     # GENERATE DATA
     # Datos de media y valor maximo

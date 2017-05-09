@@ -7,6 +7,7 @@ import sys, os
 import itertools
 import matplotlib.pyplot as plt
 from pathlib import Path
+from sklearn.metrics import confusion_matrix, average_precision_score, roc_curve, roc_auc_score
 
 # synset = [l.strip() for l in open('synset.txt').readlines()]
 
@@ -118,6 +119,25 @@ def print_accuracy(target, prob, matrix_confusion=None, predicted=[]):
     return count, matrix_confusion, predicted
 
 
+def process_prob(target, prob, predicted=[], plot_predicted=[]):
+
+    total = len(target)
+    count = 0
+    num_class = len(prob[0])
+
+    for i in range(total):
+        true_result = np.argsort(prob[i])[::-1][0]
+        if target[i] == true_result:
+            count += 1
+
+        predicted.append(true_result)
+        plot_predicted.append(prob[i][num_class-1])
+
+    accuracy = count / total
+    print('    results[ Total:'+str(total)+' | True:'+str(count)+' | False:'+str(total-count)+' | Accuracy:'+str(accuracy)+' ]')
+    return count, predicted, plot_predicted
+
+
 def load_image2(path, height=None, width=None):
     # load image
     img = skimage.io.imread(path)
@@ -225,6 +245,57 @@ def plot_confusion_matrix(cm, classes,
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
+
+
+def metrics(y_true, y_pred, plot_prod, plot_graph=False):
+
+    cm1 = confusion_matrix(y_true=y_true, y_pred=y_pred)
+    total1 = sum(sum(cm1))
+
+    print('Confusion Matrix : \n', cm1)
+    # from confusion matrix calculate accuracy
+    accuracy1 = (cm1[0, 0] + cm1[1, 1]) / total1
+    print('Total Correct : ', cm1[0, 0] + cm1[1, 1])
+    print('Accuracy      : ', accuracy1)
+
+    sensitivity1 = cm1[0, 0] / (cm1[0, 0] + cm1[0, 1])
+    print('Sensitivity   : ', sensitivity1)
+
+    specificity1 = cm1[1, 1] / (cm1[1, 0] + cm1[1, 1])
+    print('specificity   : ', specificity1)
+
+    average_precision = average_precision_score(y_true, y_pred)
+    print('Average Precision : ', average_precision)
+
+    area_under_roc = roc_auc_score(y_true, y_pred)
+    print('Area Under RCO : ', area_under_roc)
+
+    if plot_graph is True:
+        plot_curve_roc([y_true], [plot_prod])
+
+    return accuracy1
+
+
+def plot_curve_roc(y_true, y_pred, title=None):
+    res = []
+    plt.figure(1)
+    plt.plot([0, 1], [0, 1], 'k--')
+
+    for i in range(len(y_true)):
+        try:
+            t = title[i]
+        except:
+            t = 'Graph_'+str(i)
+
+        fpr, tpr, _ = roc_curve(y_true[i], y_pred[i])
+        res.append([fpr.tolist(), tpr.tolist(), t])
+        plt.plot(fpr.tolist(), tpr.tolist(), label=t)
+
+    plt.xlabel('False positive rate')
+    plt.ylabel('True positive rate')
+    plt.title('ROC curve')
+    plt.legend(loc='best')
+    plt.show()
 
 
 def directory_exist(pathname):

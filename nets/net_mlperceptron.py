@@ -24,6 +24,8 @@ class MLPerceptron:
 
     def build(self, input_batch, target, train_mode=None, layers=[4096, 2048, 2]):
 
+        self.num_class= layers[-1]
+
         start_time = time.time()
         current_input = input_batch
 

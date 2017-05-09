@@ -127,10 +127,10 @@ if __name__ == '__main__':
     # Ultimas capas de la red
     last_layers = [128, 10]
 
-    epoch = 40
+    epoch = 4
     mini_batch_train = 20
     mini_batch_test = 30
-    learning_rate = 0.0005
+    learning_rate = 0.0001
     accuracy = 0
 
     # GENERATE DATA

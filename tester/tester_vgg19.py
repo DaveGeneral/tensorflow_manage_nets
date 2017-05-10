@@ -140,7 +140,7 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
 
         # Execute Network
-        # test_model(net=vgg, sess_test=sess, objData=data_test)
+        test_model(net=vgg, sess_test=sess, objData=data_test)
         train_model(net=vgg, sess_train=sess, objData=data_train, epoch=epoch)
         accuracy = test_model(net=vgg, sess_test=sess, objData=data_test)
 

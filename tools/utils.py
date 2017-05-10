@@ -8,7 +8,9 @@ import itertools
 import matplotlib.pyplot as plt
 from pathlib import Path
 from sklearn.metrics import confusion_matrix, average_precision_score, roc_curve, roc_auc_score
-
+from sklearn.metrics import precision_recall_curve
+from sklearn.preprocessing import label_binarize
+from itertools import cycle
 # synset = [l.strip() for l in open('synset.txt').readlines()]
 
 
@@ -295,6 +297,49 @@ def plot_curve_roc(y_true, y_pred, title=None):
     plt.ylabel('True positive rate')
     plt.title('ROC curve')
     plt.legend(loc='best')
+    plt.show()
+
+
+def precision_recall(y_true, y_prob, num_class):
+    """
+    :param y_true: [1-D] 
+    :param y_prob: [1-D][num_class-D]
+    :param num_class: numero de clases
+    """
+    # Convertimos [1-D] -> [1-D][num_class-D]
+    y_true = label_binarize(y_true, classes=[i for i in range(num_class + 1)])[:, :num_class]
+
+    precision = dict()
+    recall = dict()
+    average_precision = dict()
+    for i in range(num_class):
+        precision[i], recall[i], _ = precision_recall_curve(y_true[:, i], y_prob[:, i])
+        average_precision[i] = average_precision_score(y_true[:, i], y_prob[:, i])
+
+    # Compute micro-average ROC curve and ROC area
+    precision["micro"], recall["micro"], _ = precision_recall_curve(y_true.ravel(), y_prob.ravel())
+    average_precision["micro"] = average_precision_score(y_true, y_prob, average="micro")
+
+    # setup plot details
+    colors = cycle(['navy', 'turquoise', 'darkorange', 'cornflowerblue', 'teal'])
+    lw = 1
+    # Plot Precision-recall
+    plt.figure(1)
+    plt.plot(recall["micro"], precision["micro"], color='gold', lw=lw,
+             label='micro-average Precision-recall curve (area = {0:0.2f})'
+                   ''.format(average_precision["micro"]))
+
+    for i, color in zip(range(num_class), colors):
+        plt.plot(recall[i], precision[i], color=color, lw=lw,
+                 label='Precision-recall curve of class {0} (area = {1:0.2f})'
+                       ''.format(i, average_precision[i]))
+
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Extension of Precision-Recall curve to multi-class')
+    plt.legend(loc="lower right")
     plt.show()
 
 

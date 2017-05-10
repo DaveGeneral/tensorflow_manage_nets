@@ -4,6 +4,7 @@ import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import label_binarize
 
 switch_server = True
 
@@ -24,11 +25,14 @@ else:
 
 
 # Función, fase de test
-def test_model(net, sess_test, objData, plot_roc=False):
+def test_model(net, sess_test, objData, plot_result=False):
 
     count_success = 0
     prob_predicted = []
     plot_predicted = []
+
+    label_total = []
+    prob_total = np.random.random((0, net.num_class))
 
     # Iteraciones por Batch, en cada iteracion la session de tensorflow procesa los 'n' datos de entrada
     print('\n# PHASE: Test classification')
@@ -36,6 +40,9 @@ def test_model(net, sess_test, objData, plot_roc=False):
 
         batch, label = objData.generate_batch()
         prob = sess_test.run(net.net['prob'], feed_dict={mlp_batch: batch, train_mode: False})
+
+        label_total = np.concatenate((label_total, label), axis=0)
+        prob_total = np.concatenate((prob_total, prob), axis=0)
 
         # Acumulamos la presicion de cada iteracion, para despues hacer un promedio
         count, prob_predicted, plot_predicted = utils.process_prob(label, prob, predicted=prob_predicted, plot_predicted=plot_predicted)
@@ -45,9 +52,12 @@ def test_model(net, sess_test, objData, plot_roc=False):
     # promediamos la presicion total
     print('\n# STATUS:')
     y_true = objData.labels
-    y_prod = prob_predicted
-    print(prob_predicted)
-    accuracy_total = utils.metrics(y_true, y_prod, plot_predicted, plot_roc)
+    y_prob = prob_predicted
+
+    accuracy_total = utils.metrics(y_true, y_prob, plot_predicted, plot_result)
+    # if plot_result is True:
+    #     utils.precision_recall(y_true=label_total, y_prob=prob_total, num_class=net.num_class)
+
     return accuracy_total
 
 
@@ -61,18 +71,14 @@ def train_model(net, sess_train, objData, epoch):
         cost_i = 0
         for i in range(objData.total_batchs):
             batch, label = objData.generate_batch()
-
             # Generate the 'one hot' or labels
-            label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=net.num_class)
-            label = list(sess_train.run(label))
+            label = label_binarize(label, classes=[i for i in range(net.num_class+1)])[:, :net.num_class]
+
             # Run training
-            t_start = time.time()
             _, cost = sess_train.run([net.train, net.cost], feed_dict={mlp_batch: batch, mlp_label: label, train_mode: True})
-            t_end = time.time()
             # Next slice batch
             objData.next_batch()
             cost_i = cost_i + cost
-            # print("        > Minibatch: %d train on batch time: %7.3f seg." % (i, (t_end - t_start)))
 
         t1 = time.time()
         print("        Cost per epoch: ", cost_i)
@@ -97,7 +103,7 @@ if __name__ == '__main__':
     mini_batch_train = 20
     mini_batch_test = 30
     learning_rate = 0.0001
-    epoch = 4
+    epoch = 5
     num_class = 2
 
     # GENERATE DATA
@@ -123,7 +129,7 @@ if __name__ == '__main__':
 
         test_model(MLP, sess_test=sess, objData=data_test)
         train_model(MLP, sess_train=sess, objData=data_train, epoch=epoch)
-        accuracy = test_model(MLP, sess_test=sess, objData=data_test, plot_roc=True)
+        accuracy = test_model(MLP, sess_test=sess, objData=data_test, plot_result=True)
 
         # # SAVE WEIGHTs
         MLP.save_npy(sess, path_save_weight)

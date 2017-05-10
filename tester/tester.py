@@ -1,104 +1,88 @@
-# Author: Tim Head <betatim@gmail.com>
-#
-# License: BSD 3 clause
-
-import numpy as np
-np.random.seed(10)
-
 import matplotlib.pyplot as plt
+import numpy as np
+from itertools import cycle
 
-from sklearn.datasets import make_classification
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import (RandomTreesEmbedding, RandomForestClassifier,
-                              GradientBoostingClassifier)
-from sklearn.preprocessing import OneHotEncoder
+from sklearn import svm, datasets
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import average_precision_score
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_curve
-from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import label_binarize
+from sklearn.multiclass import OneVsRestClassifier
 
-n_estimator = 10
-X, y = make_classification(n_samples=80000)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5)
-X_test = X_test[:10]
-y_test = y_test[:10]
-# It is important to train the ensemble of trees on a different subset
-# of the training data than the linear regression model to avoid
-# overfitting, in particular if the total number of leaves is
-# similar to the number of training samples
-X_train, X_train_lr, y_train, y_train_lr = train_test_split(X_train,
-                                                            y_train,
-                                                            test_size=0.5)
+# import some data to play with
+iris = datasets.load_iris()
+X = iris.data
+y = iris.target
 
-# Unsupervised transformation based on totally random trees
-rt = RandomTreesEmbedding(max_depth=3, n_estimators=n_estimator,
-    random_state=0)
+# setup plot details
+colors = cycle(['navy', 'turquoise', 'darkorange', 'cornflowerblue', 'teal'])
+lw = 1
 
-rt_lm = LogisticRegression()
-pipeline = make_pipeline(rt, rt_lm)
-pipeline.fit(X_train, y_train)
-y_pred_rt = pipeline.predict_proba(X_test)
-print(y_pred_rt)
-print(y_test, y_pred_rt[:, 1])
-fpr_rt_lm, tpr_rt_lm, _ = roc_curve(y_test, y_pred_rt)
+# Binarize the output
+y = label_binarize(y, classes=[0, 1, 2])
+n_classes = y.shape[1]
 
-# print(fpr_rt_lm, tpr_rt_lm)
+# Add noisy features
+random_state = np.random.RandomState(0)
+n_samples, n_features = X.shape
+X = np.c_[X, random_state.randn(n_samples, 200 * n_features)]
 
-# Supervised transformation based on random forests
-rf = RandomForestClassifier(max_depth=3, n_estimators=n_estimator)
-rf_enc = OneHotEncoder()
-rf_lm = LogisticRegression()
-rf.fit(X_train, y_train)
-rf_enc.fit(rf.apply(X_train))
-rf_lm.fit(rf_enc.transform(rf.apply(X_train_lr)), y_train_lr)
+# Split into training and test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.5,
+                                                    random_state=random_state)
 
-y_pred_rf_lm = rf_lm.predict_proba(rf_enc.transform(rf.apply(X_test)))[:, 1]
-fpr_rf_lm, tpr_rf_lm, _ = roc_curve(y_test, y_pred_rf_lm)
+# Run classifier
+classifier = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
+                                 random_state=random_state))
+y_score = classifier.fit(X_train, y_train).decision_function(X_test)
 
-grd = GradientBoostingClassifier(n_estimators=n_estimator)
-grd_enc = OneHotEncoder()
-grd_lm = LogisticRegression()
-grd.fit(X_train, y_train)
-grd_enc.fit(grd.apply(X_train)[:, :, 0])
-grd_lm.fit(grd_enc.transform(grd.apply(X_train_lr)[:, :, 0]), y_train_lr)
-
-y_pred_grd_lm = grd_lm.predict_proba(
-    grd_enc.transform(grd.apply(X_test)[:, :, 0]))[:, 1]
-fpr_grd_lm, tpr_grd_lm, _ = roc_curve(y_test, y_pred_grd_lm)
+# Compute Precision-Recall and plot curve
+precision = dict()
+recall = dict()
+average_precision = dict()
+for i in range(n_classes):
+    precision[i], recall[i], _ = precision_recall_curve(y_test[:, i],
+                                                        y_score[:, i])
+    average_precision[i] = average_precision_score(y_test[:, i], y_score[:, i])
 
 
-# The gradient boosted model by itself
-y_pred_grd = grd.predict_proba(X_test)[:, 1]
-fpr_grd, tpr_grd, _ = roc_curve(y_test, y_pred_grd)
+print(y_test)
+print()
+print(y_test.ravel())
+
+# Compute micro-average ROC curve and ROC area
+precision["micro"], recall["micro"], _ = precision_recall_curve(y_test.ravel(),
+    y_score.ravel())
+average_precision["micro"] = average_precision_score(y_test, y_score,
+                                                     average="micro")
 
 
-# The random forest model by itself
-y_pred_rf = rf.predict_proba(X_test)[:, 1]
-fpr_rf, tpr_rf, _ = roc_curve(y_test, y_pred_rf)
-
-plt.figure(1)
-plt.plot([0, 1], [0, 1], 'k--')
-plt.plot(fpr_rt_lm, tpr_rt_lm, label='RT + LR')
-plt.plot(fpr_rf, tpr_rf, label='RF')
-plt.plot(fpr_rf_lm, tpr_rf_lm, label='RF + LR')
-plt.plot(fpr_grd, tpr_grd, label='GBT')
-plt.plot(fpr_grd_lm, tpr_grd_lm, label='GBT + LR')
-plt.xlabel('False positive rate')
-plt.ylabel('True positive rate')
-plt.title('ROC curve')
-plt.legend(loc='best')
+# Plot Precision-Recall curve
+plt.clf()
+plt.plot(recall[0], precision[0], lw=lw, color='navy',
+         label='Precision-Recall curve')
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.ylim([0.0, 1.05])
+plt.xlim([0.0, 1.0])
+plt.title('Precision-Recall example: AUC={0:0.2f}'.format(average_precision[0]))
+plt.legend(loc="lower left")
 plt.show()
 
-plt.figure(2)
-plt.xlim(0, 0.2)
-plt.ylim(0.8, 1)
-plt.plot([0, 1], [0, 1], 'k--')
-plt.plot(fpr_rt_lm, tpr_rt_lm, label='RT + LR')
-plt.plot(fpr_rf, tpr_rf, label='RF')
-plt.plot(fpr_rf_lm, tpr_rf_lm, label='RF + LR')
-plt.plot(fpr_grd, tpr_grd, label='GBT')
-plt.plot(fpr_grd_lm, tpr_grd_lm, label='GBT + LR')
-plt.xlabel('False positive rate')
-plt.ylabel('True positive rate')
-plt.title('ROC curve (zoomed in at top left)')
-plt.legend(loc='best')
+# Plot Precision-Recall curve for each class
+plt.clf()
+plt.plot(recall["micro"], precision["micro"], color='gold', lw=lw,
+         label='micro-average Precision-recall curve (area = {0:0.2f})'
+               ''.format(average_precision["micro"]))
+for i, color in zip(range(n_classes), colors):
+    plt.plot(recall[i], precision[i], color=color, lw=lw,
+             label='Precision-recall curve of class {0} (area = {1:0.2f})'
+                   ''.format(i, average_precision[i]))
+
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('Recall')
+plt.ylabel('Precision')
+plt.title('Extension of Precision-Recall curve to multi-class')
+plt.legend(loc="lower right")
 plt.show()

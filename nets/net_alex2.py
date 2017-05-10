@@ -17,14 +17,14 @@ class ALEXNET:
             self.data_dict = None
             print("random weight")
 
-        print(self.data_dict['conv2'])
+        print(self.data_dict['fc7'])
         self.var_dict = {}
         self.trainable = trainable
         self.learning_rate = learning_rate
         self.dropout = dropout
         self.load_weight_fc = load_weight_fc
 
-    def build(self, rgb, target, train_mode=True):
+    def build(self, rgb, target, train_mode=True, num_class=1000):
         """
         load variable from npy to build the vgg
 
@@ -33,6 +33,7 @@ class ALEXNET:
         :param train_mode: a bool tensor, usually a placeholder: if True, dropout will be turned on
         :param size_layer_fc: size of the last layer classification by default vgg19 use 4096
         """
+        self.num_class = num_class
 
         start_time = time.time()
         print("build model started")
@@ -56,20 +57,26 @@ class ALEXNET:
 
         self.conv2 = self.conv_layer(self.pool1, 96, 256, 5, 1, 1, group=2, name="conv2")
         self.lrn2 = tf.nn.lrn(self.conv2, depth_radius=2, alpha=2e-05, beta=0.75, bias=1.0, name='norm2')
+        print(self.lrn2)
         self.pool2 = self.max_pool(self.lrn2, 3, 3, 2, 2, padding='VALID', name='pool1')
+        print(self.pool2)
 
         self.conv3 = self.conv_layer(self.pool2, 256, 384, 3, 1, 1, name="conv3")
-        self.conv4 = self.conv_layer(self.conv3, 384, 384, 3, 1, 1, name="conv4")
-        self.conv5 = self.conv_layer(self.conv4, 384, 256, 3, 1, 1, name="conv5")
-        self.pool5 = self.max_pool(self.conv5, 3, 3, 2, 2, padding='VALID', name='pool5')
+        self.conv4 = self.conv_layer(self.conv3, 384, 384, 3, 1, 1, group=2, name="conv4")
+        self.conv5 = self.conv_layer(self.conv4, 384, 256, 3, 1, 1, group=2, name="conv5")
+        self.pool5 = self.max_pool(self.conv5, 3, 3, 2, 2, padding='SAME', name='pool5')
 
-        self.fc6 = self.fc_layer(self.pool5, 43264, 4096, "fc6", load_weight_force=False) # 43264 = 256 * 13 * 13
+        print(self.conv3)
+        print(self.conv4)
+        print(self.conv5)
+        print(self.pool5)
+        self.fc6 = self.fc_layer(self.pool5, 9216, 4096, "fc6", load_weight_force=True) # 9216 = 256 * 6 * 6
         self.relu6 = tf.nn.relu(self.fc6)
 
-        self.fc7 = self.fc_layer(self.relu6, 4096, 4096, "fc7", load_weight_force=False)  # 43264 = 256 * 13 * 13
+        self.fc7 = self.fc_layer(self.relu6, 4096, 4096, "fc7", load_weight_force=True)
         self.relu7 = tf.nn.relu(self.fc7)
 
-        self.fc8 = self.fc_layer(self.relu7, 4096, 1000, "fc8", load_weight_force=False)  # 43264 = 256 * 13 * 13
+        self.fc8 = self.fc_layer(self.relu7, 4096, num_class, "fc8", load_weight_force=False)
         self.prob = tf.nn.softmax(self.fc8, name="prob")
 
         # COST - TRAINING
@@ -89,9 +96,21 @@ class ALEXNET:
         with tf.variable_scope(name):
             filt, conv_biases = self.get_conv_var(filter_size, int(in_channels / group), out_channels, name)
 
-            conv = tf.nn.conv2d(bottom, filt, [1, s_h, s_w, 1], padding=padding)
-            bias = tf.nn.bias_add(conv, conv_biases)
-            relu = tf.nn.relu(bias)
+            if group == 1:
+                conv = tf.nn.conv2d(bottom, filt, [1, s_h, s_w, 1], padding=padding)
+                bias = tf.nn.bias_add(conv, conv_biases)
+                relu = tf.nn.relu(bias)
+            else:
+                input_groups = tf.split(bottom, group, axis=3)
+                kernel_groups = tf.split(filt, group, axis=3)
+                conv_groups = []
+                for i in range(group):
+                    conv_groups.append(tf.nn.conv2d(input_groups[i], kernel_groups[i], [1, s_h, s_w, 1], padding=padding))
+
+                # Concatenate the groups
+                output_conv = tf.concat(conv_groups, axis=3)
+                bias = tf.nn.bias_add(output_conv, conv_biases)
+                relu = tf.nn.relu(bias)
             return relu
 
     # Generate Parameter Convol layer
@@ -118,7 +137,6 @@ class ALEXNET:
             var = tf.constant(value, dtype=tf.float32, name=var_name)
 
         self.var_dict[(name, idx)] = var
-        print(var.get_shape(), initial_value.get_shape())
         assert var.get_shape() == initial_value.get_shape()
         return var
 
@@ -144,6 +162,7 @@ class ALEXNET:
     # Construct dictionary with random parameters or load parameters
     def get_var_fc(self, initial_value, name, idx, var_name, load_wf=False):
         if self.data_dict is not None and name in self.data_dict and ((self.load_weight_fc is True) or (load_wf is True)):
+            print(name, idx)
             value = self.data_dict[name][idx]
         else:
             value = initial_value
@@ -153,6 +172,7 @@ class ALEXNET:
         else:
             var = tf.constant(value, dtype=tf.float32, name=var_name)
 
+        # print(var.get_shape(), initial_value.get_shape())
         self.var_dict[(name, idx)] = var
         assert var.get_shape() == initial_value.get_shape()
         return var

@@ -21,11 +21,11 @@ else:
 
 
 # GLOBAL VARIABLES
-path = '../../data/ISB2016/'
-path_dir_image_train = path + "image_train_complete/"
-path_dir_image_test = path + "image_test_complete/"
-path_data_train = path + 'ISB_Train_complete.csv'
-path_data_test = path + 'ISB_Test_complete.csv'
+path = '../../data/CIFAR_10/'
+path_dir_image_train = path + "train_cifar10_original/"
+path_dir_image_test = path + "test_cifar10_original/"
+path_data_train = path + 'cifar10_train_label.csv'
+path_data_test = path + 'cifar10_test_label.csv'
 
 if __name__ == '__main__':
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     # Ultimas capas de la red
     # last_layers = [128, 10]
-    num_class = 1000
+    num_class = 10
     epoch = 4
     mini_batch_train = 20
     mini_batch_test = 30
@@ -51,5 +51,5 @@ if __name__ == '__main__':
 
         # Initialize of the model VGG19
         vgg = ALEX.ALEXNET(path_load_weight, learning_rate=learning_rate, load_weight_fc=load_weight_fc)
-        vgg.build(vgg_batch, vgg_label, train_mode)
+        vgg.build(vgg_batch, vgg_label, train_mode, num_class=num_class)
         sess.run(tf.global_variables_initializer())

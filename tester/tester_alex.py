@@ -121,13 +121,13 @@ if __name__ == '__main__':
 
     # LOad y save  weights
     path_load_weight = '../weight/vgg19.npy'
-    path_save_weight = '../weight/save_cifar.npy'
+    path_save_weight = '../weight/save_cifar_1.npy'
     load_weight_fc = False
 
     # Ultimas capas de la red
-    last_layers = [128, 10]
+    last_layers = [48, 10]
 
-    epoch = 4
+    epoch = 50
     mini_batch_train = 20
     mini_batch_test = 30
     learning_rate = 0.0001

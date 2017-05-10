@@ -2,8 +2,6 @@ import time
 import tensorflow as tf
 import sys, os
 import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import label_binarize
 
 switch_server = True

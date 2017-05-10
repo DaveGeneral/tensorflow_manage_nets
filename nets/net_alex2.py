@@ -7,7 +7,7 @@ import inspect
 VGG_MEAN = [103.939, 116.779, 123.68]
 
 
-class VGG19:
+class ALEXNET:
 
     def __init__(self, npy_path=None, trainable=True, learning_rate=0.05, dropout=0.5, load_weight_fc=False):
         if npy_path is not None:
@@ -17,13 +17,14 @@ class VGG19:
             self.data_dict = None
             print("random weight")
 
+        print(self.data_dict['conv2'])
         self.var_dict = {}
         self.trainable = trainable
         self.learning_rate = learning_rate
         self.dropout = dropout
         self.load_weight_fc = load_weight_fc
 
-    def build(self, rgb, target, train_mode=True, last_layers=[128, 10]):
+    def build(self, rgb, target, train_mode=True):
         """
         load variable from npy to build the vgg
 
@@ -32,7 +33,6 @@ class VGG19:
         :param train_mode: a bool tensor, usually a placeholder: if True, dropout will be turned on
         :param size_layer_fc: size of the last layer classification by default vgg19 use 4096
         """
-        self.num_class = last_layers[-1]
 
         start_time = time.time()
         print("build model started")
@@ -50,50 +50,27 @@ class VGG19:
         ])
         assert bgr.get_shape().as_list()[1:] == [224, 224, 3]
 
-        self.conv1_1 = self.conv_layer(bgr, 3, 64, "conv1_1")
-        self.conv1_2 = self.conv_layer(self.conv1_1, 64, 64, "conv1_2")
-        self.pool1 = self.max_pool(self.conv1_2, 'pool1')
+        self.conv1 = self.conv_layer(bgr, 3, 96, 11, 4, 4, padding='VALID', name="conv1")
+        self.lrn1 = tf.nn.lrn(self.conv1, depth_radius=2, alpha=2e-05, beta=0.75, bias=1.0, name='norm1')
+        self.pool1 = self.max_pool(self.lrn1, 3, 3, 2, 2, padding='VALID', name='pool1')
 
-        self.conv2_1 = self.conv_layer(self.pool1, 64, 128, "conv2_1")
-        self.conv2_2 = self.conv_layer(self.conv2_1, 128, 128, "conv2_2")
-        self.pool2 = self.max_pool(self.conv2_2, 'pool2')
+        self.conv2 = self.conv_layer(self.pool1, 96, 256, 5, 1, 1, group=2, name="conv2")
+        self.lrn2 = tf.nn.lrn(self.conv2, depth_radius=2, alpha=2e-05, beta=0.75, bias=1.0, name='norm2')
+        self.pool2 = self.max_pool(self.lrn2, 3, 3, 2, 2, padding='VALID', name='pool1')
 
-        self.conv3_1 = self.conv_layer(self.pool2, 128, 256, "conv3_1")
-        self.conv3_2 = self.conv_layer(self.conv3_1, 256, 256, "conv3_2")
-        self.conv3_3 = self.conv_layer(self.conv3_2, 256, 256, "conv3_3")
-        self.conv3_4 = self.conv_layer(self.conv3_3, 256, 256, "conv3_4")
-        self.pool3 = self.max_pool(self.conv3_4, 'pool3')
+        self.conv3 = self.conv_layer(self.pool2, 256, 384, 3, 1, 1, name="conv3")
+        self.conv4 = self.conv_layer(self.conv3, 384, 384, 3, 1, 1, name="conv4")
+        self.conv5 = self.conv_layer(self.conv4, 384, 256, 3, 1, 1, name="conv5")
+        self.pool5 = self.max_pool(self.conv5, 3, 3, 2, 2, padding='VALID', name='pool5')
 
-        self.conv4_1 = self.conv_layer(self.pool3, 256, 512, "conv4_1")
-        self.conv4_2 = self.conv_layer(self.conv4_1, 512, 512, "conv4_2")
-        self.conv4_3 = self.conv_layer(self.conv4_2, 512, 512, "conv4_3")
-        self.conv4_4 = self.conv_layer(self.conv4_3, 512, 512, "conv4_4")
-        self.pool4 = self.max_pool(self.conv4_4, 'pool4')
-
-        self.conv5_1 = self.conv_layer(self.pool4, 512, 512, "conv5_1")
-        self.conv5_2 = self.conv_layer(self.conv5_1, 512, 512, "conv5_2")
-        self.conv5_3 = self.conv_layer(self.conv5_2, 512, 512, "conv5_3")
-        self.conv5_4 = self.conv_layer(self.conv5_3, 512, 512, "conv5_4")
-        self.pool5 = self.max_pool(self.conv5_4, 'pool5')
-
-        self.fc6 = self.fc_layer(self.pool5, 25088, 4096, "fc6", load_weight_force=True) # 25088 = ((224 // (2 ** 5)) ** 2) * 512
+        self.fc6 = self.fc_layer(self.pool5, 43264, 4096, "fc6", load_weight_force=False) # 43264 = 256 * 13 * 13
         self.relu6 = tf.nn.relu(self.fc6)
 
-        # DROPOUT
-        if self.trainable is True:
-            self.relu6 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu6, self.dropout), lambda: self.relu6)
-
-        self.fc7 = self.fc_layer(self.relu6, 4096, 4096, "fc7", load_weight_force=True)
+        self.fc7 = self.fc_layer(self.relu6, 4096, 4096, "fc7", load_weight_force=False)  # 43264 = 256 * 13 * 13
         self.relu7 = tf.nn.relu(self.fc7)
 
-        # DROPOUT
-        if self.trainable is True:
-            self.relu7 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu7, self.dropout), lambda: self.relu7)
-
-        self.fc8 = self.fc_layer_sigmoid(self.relu7, 4096, last_layers[0], "fc8")
-
-        self.fc9 = self.fc_layer(self.fc8, last_layers[0], last_layers[1], "fc9")
-        self.prob = tf.nn.softmax(self.fc9, name="prob")
+        self.fc8 = self.fc_layer(self.relu7, 4096, 1000, "fc8", load_weight_force=False)  # 43264 = 256 * 13 * 13
+        self.prob = tf.nn.softmax(self.fc8, name="prob")
 
         # COST - TRAINING
         self.cost = tf.reduce_mean((self.prob - target) ** 2)
@@ -104,15 +81,15 @@ class VGG19:
         print(("build model finished: %ds" % (time.time() - start_time)))
 
     # Layer MaxPool
-    def max_pool(self, bottom, name):
-        return tf.nn.max_pool(bottom, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME', name=name)
+    def max_pool(self, bottom, k_h, k_w, s_h, s_w, padding='SAME', name=''):
+        return tf.nn.max_pool(bottom, ksize=[1, k_h, k_w, 1], strides=[1, s_h, s_w, 1], padding=padding, name=name)
 
     # Layer Convolutional
-    def conv_layer(self, bottom, in_channels, out_channels, name):
+    def conv_layer(self, bottom, in_channels, out_channels, filter_size=3, s_h=1, s_w=1, group=1, padding='SAME', name=''):
         with tf.variable_scope(name):
-            filt, conv_biases = self.get_conv_var(3, in_channels, out_channels, name)
+            filt, conv_biases = self.get_conv_var(filter_size, int(in_channels / group), out_channels, name)
 
-            conv = tf.nn.conv2d(bottom, filt, [1, 1, 1, 1], padding='SAME')
+            conv = tf.nn.conv2d(bottom, filt, [1, s_h, s_w, 1], padding=padding)
             bias = tf.nn.bias_add(conv, conv_biases)
             relu = tf.nn.relu(bias)
             return relu
@@ -120,16 +97,17 @@ class VGG19:
     # Generate Parameter Convol layer
     def get_conv_var(self, filter_size, in_channels, out_channels, name):
         initial_value = tf.truncated_normal([filter_size, filter_size, in_channels, out_channels], 0.0, 0.001)
-        filters = self.get_var_conv(initial_value, name, 0, name + "_filters")
+        filters = self.get_var_conv(initial_value, name, 'weights', name + "_filters")
 
         initial_value = tf.truncated_normal([out_channels], .0, .001)
-        biases = self.get_var_conv(initial_value, name, 1, name + "_biases")
+        biases = self.get_var_conv(initial_value, name, 'biases', name + "_biases")
 
         return filters, biases
 
     # Construct dictionary with random parameters or load parameters
     def get_var_conv(self, initial_value, name, idx, var_name):
         if self.data_dict is not None and name in self.data_dict:
+            print(name, idx)
             value = self.data_dict[name][idx]
         else:
             value = initial_value
@@ -140,6 +118,7 @@ class VGG19:
             var = tf.constant(value, dtype=tf.float32, name=var_name)
 
         self.var_dict[(name, idx)] = var
+        print(var.get_shape(), initial_value.get_shape())
         assert var.get_shape() == initial_value.get_shape()
         return var
 
@@ -152,22 +131,13 @@ class VGG19:
             fc = tf.nn.bias_add(tf.matmul(x, weights), biases)
             return fc
 
-    # Layer Sigmoid
-    def fc_layer_sigmoid(self, bottom, in_size, out_size, name, load_weight_force=False):
-        with tf.variable_scope(name):
-            weights, biases = self.get_fc_var(in_size, out_size, name, load_weight_force)
-
-            x = tf.reshape(bottom, [-1, in_size])
-            fc = tf.nn.sigmoid(tf.matmul(x,weights) + biases)
-            return fc
-
     # Generate Parameter FullConnect layer
     def get_fc_var(self, in_size, out_size, name, load_wf=False):
         initial_value = tf.truncated_normal([in_size, out_size], 0.0, 0.001)
-        weights = self.get_var_fc(initial_value, name, 0, name + "_weights", load_wf)
+        weights = self.get_var_fc(initial_value, name, 'weights', name + "_weights", load_wf)
 
         initial_value = tf.truncated_normal([out_size], .0, .001)
-        biases = self.get_var_fc(initial_value, name, 1, name + "_biases", load_wf)
+        biases = self.get_var_fc(initial_value, name, 'biases', name + "_biases", load_wf)
 
         return weights, biases
 

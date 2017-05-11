@@ -24,7 +24,7 @@ class ALEXNET:
         self.dropout = dropout
         self.load_weight_fc = load_weight_fc
 
-    def build(self, rgb, target, train_mode=True, num_class=1000):
+    def build(self, rgb, target, train_mode=True, last_layers=[4096, 1000]):
         """
         load variable from npy to build the vgg
 
@@ -33,7 +33,7 @@ class ALEXNET:
         :param train_mode: a bool tensor, usually a placeholder: if True, dropout will be turned on
         :param size_layer_fc: size of the last layer classification by default vgg19 use 4096
         """
-        self.num_class = num_class
+        self.num_class = last_layers[-1]
 
         start_time = time.time()
         print("build model started")
@@ -57,26 +57,20 @@ class ALEXNET:
 
         self.conv2 = self.conv_layer(self.pool1, 96, 256, 5, 1, 1, group=2, name="conv2")
         self.lrn2 = tf.nn.lrn(self.conv2, depth_radius=2, alpha=2e-05, beta=0.75, bias=1.0, name='norm2')
-        print(self.lrn2)
+
         self.pool2 = self.max_pool(self.lrn2, 3, 3, 2, 2, padding='VALID', name='pool1')
-        print(self.pool2)
 
         self.conv3 = self.conv_layer(self.pool2, 256, 384, 3, 1, 1, name="conv3")
         self.conv4 = self.conv_layer(self.conv3, 384, 384, 3, 1, 1, group=2, name="conv4")
         self.conv5 = self.conv_layer(self.conv4, 384, 256, 3, 1, 1, group=2, name="conv5")
         self.pool5 = self.max_pool(self.conv5, 3, 3, 2, 2, padding='SAME', name='pool5')
 
-        print(self.conv3)
-        print(self.conv4)
-        print(self.conv5)
-        print(self.pool5)
         self.fc6 = self.fc_layer(self.pool5, 9216, 4096, "fc6", load_weight_force=True) # 9216 = 256 * 6 * 6
         self.relu6 = tf.nn.relu(self.fc6)
 
-        self.fc7 = self.fc_layer(self.relu6, 4096, 4096, "fc7", load_weight_force=True)
-        self.relu7 = tf.nn.relu(self.fc7)
+        self.fc7 = self.fc_layer_sigmoid(self.relu6, 4096, last_layers[0], "fc7", load_weight_force=True)
 
-        self.fc8 = self.fc_layer(self.relu7, 4096, num_class, "fc8", load_weight_force=False)
+        self.fc8 = self.fc_layer(self.relu7, last_layers[0], last_layers[1], "fc8", load_weight_force=False)
         self.prob = tf.nn.softmax(self.fc8, name="prob")
 
         # COST - TRAINING
@@ -147,6 +141,15 @@ class ALEXNET:
 
             x = tf.reshape(bottom, [-1, in_size])
             fc = tf.nn.bias_add(tf.matmul(x, weights), biases)
+            return fc
+
+    # Layer Sigmoid
+    def fc_layer_sigmoid(self, bottom, in_size, out_size, name, load_weight_force=False):
+        with tf.variable_scope(name):
+            weights, biases = self.get_fc_var(in_size, out_size, name, load_weight_force)
+
+            x = tf.reshape(bottom, [-1, in_size])
+            fc = tf.nn.sigmoid(tf.matmul(x, weights) + biases)
             return fc
 
     # Generate Parameter FullConnect layer

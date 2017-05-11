@@ -111,12 +111,12 @@ if __name__ == '__main__':
     load_weight_fc = False
 
     # Ultimas capas de la red
-    # last_layers = [128, 10]
     num_class = 10
-    epoch = 4
-    mini_batch_train = 20
+    last_layers = [48, num_class]
+    epoch = 2
+    mini_batch_train = 25
     mini_batch_test = 30
-    learning_rate = 0.0001
+    learning_rate = 0.0005
     accuracy = 0
 
     # GENERATE DATA
@@ -128,12 +128,12 @@ if __name__ == '__main__':
     with tf.Session() as sess:
         # DEFINE MODEL
         vgg_batch = tf.placeholder(tf.float32, [None, 224, 224, 3])
-        vgg_label = tf.placeholder(tf.float32, [None, num_class])
+        vgg_label = tf.placeholder(tf.float32, [None, last_layers[1]])
         train_mode = tf.placeholder(tf.bool)
 
         # Initialize of the model VGG19
         vgg = ALEX.ALEXNET(path_load_weight, learning_rate=learning_rate, load_weight_fc=load_weight_fc)
-        vgg.build(vgg_batch, vgg_label, train_mode, num_class=num_class)
+        vgg.build(vgg_batch, vgg_label, train_mode, last_layers=last_layers)
         sess.run(tf.global_variables_initializer())
 
         # # Execute Network

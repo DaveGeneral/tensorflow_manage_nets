@@ -155,6 +155,3 @@ if __name__ == '__main__':
 
         # SAVE WEIGHTs
         vgg.save_npy(sess, path_save_weight)
-
-
-

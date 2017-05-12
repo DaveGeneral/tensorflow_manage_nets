@@ -95,3 +95,4 @@ data/features/*/*.csv
 data/features/*.csv
 ipynb
 alex/
+data

@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     # Ultimas capas de la red
     num_class = 10
-    last_layers = [48, num_class]
+    last_layers = [4096, num_class]
     epoch = 2
     mini_batch_train = 25
     mini_batch_test = 30

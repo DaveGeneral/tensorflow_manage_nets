@@ -110,7 +110,7 @@ def plot_result(net, sess, batch, n_examples=5):
 #     Opcion para ejecutar la red con distintas fuentes de datos,
 #                   son tres fuentes de datos
 
-OPC = 'A'
+OPC = 'B'
 # ..................................................................
 
 # GLOBAL VARIABLES
@@ -125,9 +125,10 @@ path_data_test_dual = [path + 'SKINfeatures'+OPC+'_Test.csv']
 
 path_load_weight_dual = None
 path_save_weight_dual = '../weight/tlaencode_dual_'+OPC+'_1.npy'
-path_load_weight0 = None
+
+path_load_weight0 = '../weight/tlaencode_dual_'+OPC+'_1.npy'
 path_save_weight0 = '../weight/tlaencode_class0_'+OPC+'_1.npy'
-path_load_weight1 = None
+path_load_weight1 = '../weight/tlaencode_dual_'+OPC+'_1.npy'
 path_save_weight1 = '../weight/tlaencode_class1_'+OPC+'_1.npy'
 
 
@@ -194,7 +195,7 @@ if __name__ == '__main__':
         noise_mode = tf.placeholder(tf.bool)
 
         # Default: path_save_weight_dual
-        AEncode = AE.AEncoder(path_save_weight_dual, learning_rate=learning_rate, noise=noise_level)
+        AEncode = AE.AEncoder(path_load_weight0, learning_rate=learning_rate, noise=noise_level)
         AEncode.build(x_batch, mask, noise_mode, [2048, 1024])
         sess.run(tf.global_variables_initializer())
 
@@ -229,7 +230,7 @@ if __name__ == '__main__':
         noise_mode = tf.placeholder(tf.bool)
 
         # Default: path_save_weight_dual
-        AEncode = AE.AEncoder(path_save_weight_dual, learning_rate=learning_rate, noise=noise_level)
+        AEncode = AE.AEncoder(path_load_weight1, learning_rate=learning_rate, noise=noise_level)
         AEncode.build(x_batch, mask, noise_mode, [2048, 1024])
         sess.run(tf.global_variables_initializer())
 

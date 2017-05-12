@@ -30,6 +30,7 @@ class AEncoder:
         # BUILD THE ENCODER
         # -----------------
         shapes = []
+        self.x = current_input
         for i, n_output in enumerate(l_hidden[0:]):
             shapes.append(current_input.get_shape().as_list())
             n_input = current_input.get_shape().as_list()[1]

@@ -51,7 +51,8 @@ class Dataset_csv:
         self.inputs = self.data.iloc[:, :-1]
 
         if max_value is None:
-            self.amax = self.inputs.max()
+            self.amax = np.array(self.inputs.max())
+            self.amax[self.amax <= 0] = 0.0001
         else:
             self.amax = max_value
 

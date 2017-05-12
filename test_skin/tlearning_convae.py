@@ -121,9 +121,10 @@ path_data_test_dual = [path + 'SKINfeatures'+OPC+'_Test.csv']
 
 path_load_weight_dual = None
 path_save_weight_dual = '../weight/tlconvolae_dual_'+OPC+'_1.npy'
-path_load_weight0 = None
+
+path_load_weight0 = '../weight/tlconvolae_dual_'+OPC+'_1.npy'
 path_save_weight0 = '../weight/tlconvolae_class0_'+OPC+'_1.npy'
-path_load_weight1 = None
+path_load_weight1 = '../weight/tlconvolae_dual_'+OPC+'_1.npy'
 path_save_weight1 = '../weight/tlconvolae_class1_'+OPC+'_1.npy'
 
 
@@ -185,7 +186,7 @@ if __name__ == '__main__':
         x_batch = tf.placeholder(tf.float32, [None, 4096])
 
         # Default: path_save_weight_dual
-        CAEncode = CAE.ConvAEncoder(path_save_weight_dual, learning_rate=learning_rate)
+        CAEncode = CAE.ConvAEncoder(path_load_weight0, learning_rate=learning_rate)
         CAEncode.build(input_batch=x_batch, n_filters=[1, 10, 10], corruption=False)
         sess.run(tf.global_variables_initializer())
 
@@ -218,7 +219,7 @@ if __name__ == '__main__':
         x_batch = tf.placeholder(tf.float32, [None, 4096])
 
         # Default: path_save_weight_dual
-        CAEncode = CAE.ConvAEncoder(path_save_weight_dual, learning_rate=learning_rate)
+        CAEncode = CAE.ConvAEncoder(path_load_weight1, learning_rate=learning_rate)
         CAEncode.build(input_batch=x_batch, n_filters=[1, 10, 10], corruption=False)
         sess.run(tf.global_variables_initializer())
 

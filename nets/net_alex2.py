@@ -68,9 +68,9 @@ class ALEXNET:
         self.fc6 = self.fc_layer(self.pool5, 9216, 4096, "fc6", load_weight_force=True) # 9216 = 256 * 6 * 6
         self.relu6 = tf.nn.relu(self.fc6)
 
-        self.fc7 = self.fc_layer_sigmoid(self.relu6, 4096, last_layers[0], "fc7", load_weight_force=True)
+        self.fc7 = self.fc_layer_sigmoid(self.relu6, 4096, last_layers[0], "fc7", load_weight_force=False)
 
-        self.fc8 = self.fc_layer(self.relu7, last_layers[0], last_layers[1], "fc8", load_weight_force=False)
+        self.fc8 = self.fc_layer(self.fc7, last_layers[0], last_layers[1], "fc8", load_weight_force=False)
         self.prob = tf.nn.softmax(self.fc8, name="prob")
 
         # COST - TRAINING

@@ -133,7 +133,7 @@ path_save_weight1 = '../weight/tlaencode_class1_'+OPC+'_1.npy'
 
 if __name__ == '__main__':
 
-    mini_batch_train = 20
+    mini_batch_train = 25
     mini_batch_test = 30
     epoch = 10
     learning_rate = 0.00001

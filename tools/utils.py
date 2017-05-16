@@ -190,10 +190,16 @@ def write_log(total_data, epoch, m_batch, l_rate, accuracy=0, file_npy='None', e
     print('Create log in log-server.txt:', id)
 
 
-def save_layer_output(output, label, name="layer", dir='/'):
+def save_layer_output(out_layer, label, name="layer", dir='/'):
+
+    shx = out_layer.shape
+
+    if len(shx)==4:
+        out_layer = np.reshape(out_layer, [-1, shx[1] * shx[2] * shx[3]])
+
     total = len(label)
     lab = np.reshape(label, (total, 1))
-    res = np.concatenate((output, lab), axis=1)
+    res = np.concatenate((out_layer, lab), axis=1)
 
     f = open(dir+"output_"+name+".csv", "a+")
     for i in range(total):
@@ -202,10 +208,16 @@ def save_layer_output(output, label, name="layer", dir='/'):
     print("    Save feature extractor, "+name)
 
 
-def save_layer_output_by_class(output, label, name="layer", dir='/'):
+def save_layer_output_by_class(out_layer, label, name="layer", dir='/'):
+
+    shx = out_layer.shape
+
+    if len(shx) == 4:
+        out_layer = np.reshape(out_layer, [-1, shx[1] * shx[2] * shx[3]])
+
     total = len(label)
     lab = np.reshape(label, (total, 1))
-    res = np.concatenate((output, lab), axis=1)
+    res = np.concatenate((out_layer, lab), axis=1)
 
     for i in range(total):
         f = open(dir+"output_" + name + '_class' + str(int(label[i])) + ".csv", "a+")

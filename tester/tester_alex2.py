@@ -52,7 +52,7 @@ def test_model(net, sess_test, objData):
     for i in range(objData.total_batchs_complete):
 
         batch, label = objData.generate_batch()
-        prob, layer = sess_test.run([net.prob, net.fc8], feed_dict={vgg_batch: batch, train_mode: False})
+        prob, layer = sess_test.run([net.prob, net.pool5], feed_dict={vgg_batch: batch, train_mode: False})
 
         # save output of a layer
         # utils.save_layer_output(layer, label, name='layer_128', dir='../data/features/')

@@ -46,7 +46,7 @@ def test_model(net, sess_test, objData):
         cost, layer = sess_test.run([net.cost, net.net['encodeFC_1']], feed_dict={x_batch: x_, mask: mask_np, noise_mode: False})
 
         # save output of a layer
-        # utils.save_layer_output(layer, label, name='Train_AE1_fc1')
+        # utils.save_layer_output(layer, label, name='Train_AE1_fc1', dir='../data/features_cifar10/')
 
         cost_total = cost_total + cost
         objData.next_batch_test()

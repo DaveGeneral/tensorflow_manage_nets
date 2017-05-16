@@ -23,7 +23,7 @@ else:
 
 
 # GLOBAL VARIABLES
-path = '../data/features/'
+path = '../data/features/muestraA/'
 path_data_train = [path+'SKINfeaturesA_Test.csv']
 path_data_test = [path+'SKINfeaturesA_Train.csv']
 
@@ -100,7 +100,7 @@ def train_model(net, sess_train, objData, epoch):
 
 if __name__ == '__main__':
 
-    path_load_weight = '../weight/saveMlpB_1.npy'
+    path_load_weight = None
     path_save_weight = '../weight/saveMlpB_1.npy'
 
     mini_batch_train = 20
@@ -113,8 +113,9 @@ if __name__ == '__main__':
     # Datos de media y valor maximo
     data_normal = Dataset_csv(path_data=[path_data_train[0], path_data_test[0]], random=False)
     Damax = data_normal.amax
+
     # Load data train
-    data_train = Dataset_csv(path_data=path_data_train, minibatch=mini_batch_train, max_value=Damax, restrict=True)
+    data_train = Dataset_csv(path_data=path_data_train, minibatch=mini_batch_train, max_value=Damax)
     # Load data test
     data_test = Dataset_csv(path_data=path_data_test, minibatch=mini_batch_test, max_value=Damax, random=False)
     accuracy = 0
@@ -127,7 +128,7 @@ if __name__ == '__main__':
         train_mode = tf.placeholder(tf.bool)
 
         MLP = MLP.MLPerceptron(path_load_weight, learning_rate=learning_rate)
-        MLP.build(mlp_batch, mlp_label, train_mode, layers=[2048, 1024, num_class])
+        MLP.build(mlp_batch, mlp_label, train_mode, layers=[[2048, 'sigmoid'], [1024, 'relu'], num_class])
         sess.run(tf.global_variables_initializer())
 
         test_model(MLP, sess_test=sess, objData=data_test)

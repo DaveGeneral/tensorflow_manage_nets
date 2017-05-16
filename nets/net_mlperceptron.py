@@ -22,7 +22,7 @@ class MLPerceptron:
         self.dropout = dropout
         self.net = {}
 
-    def build(self, input_batch, target, train_mode=None, layers=[4096, 2048, 2]):
+    def build(self, input_batch, target, train_mode=None, layers=[[4096,''], [2048,''], 2]):
 
         self.num_class= layers[-1]
 
@@ -36,7 +36,11 @@ class MLPerceptron:
         for i, n_output in enumerate(layers[:-1]):
             n_input = current_input.get_shape().as_list()[1]
             name = 'fc_' + str(i)
-            self.net[name] = tf.nn.relu(self.fc_layer(current_input, n_input, n_output, name))
+            if n_output[1] == 'sigmoid':
+                self.net[name] = tf.nn.sigmoid(self.fc_layer(current_input, n_input, n_output[0], name))
+            else:
+                self.net[name] = tf.nn.relu(self.fc_layer(current_input, n_input, n_output[0], name))
+
             # DROPOUT
             if self.trainable is True:
                 self.net[name] = tf.cond(train_mode, lambda: tf.nn.dropout(self.net[name], self.dropout), lambda: self.net[name])

@@ -43,7 +43,7 @@ def test_model(net, sess_test, objData):
     for i in range(objData.total_batchs_complete):
 
         batch, label = objData.generate_batch()
-        prob = sess_test.run(net.net['prob'], feed_dict={mlp_batch: batch, train_mode: False})
+        prob, layer = sess_test.run([net.net['prob'], net.net['fc_1']], feed_dict={mlp_batch: batch, train_mode: False})
 
         # save output of a layer
         # utils.save_layer_output(layer, label, name='Train_SNC4_relu6')

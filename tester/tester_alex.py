@@ -66,7 +66,7 @@ def test_model(net, sess_test, objData):
     for i in range(objData.total_batchs_complete):
 
         batch, label = objData.generate_batch()
-        prob, layer = sess_test.run([net.prob, net.fc8], feed_dict={vgg_batch: batch, train_mode: False})
+        prob, layer = sess_test.run([net.prob, net.fc7], feed_dict={vgg_batch: batch, train_mode: False})
 
         # save output of a layer
         # utils.save_layer_output(layer, label, name='layer_128', dir='../data/features/')
@@ -121,13 +121,13 @@ if __name__ == '__main__':
 
     # LOad y save  weights
     path_load_weight = '../weight/vgg19.npy'
-    path_save_weight = '../weight/save_cifar_1.npy'
+    path_save_weight = '../weight/save_cifar10_1.npy'
     load_weight_fc = False
 
     # Ultimas capas de la red
-    last_layers = [48, 10]
+    last_layers = [4096, 10]
 
-    epoch = 50
+    epoch = 2
     mini_batch_train = 20
     mini_batch_test = 30
     learning_rate = 0.0001

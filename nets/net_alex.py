@@ -83,22 +83,20 @@ class VGG19:
         if self.trainable is True:
             self.relu6 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu6, self.dropout), lambda: self.relu6)
 
-        self.fc7 = self.fc_layer(self.relu6, 4096, 4096, "fc7", load_weight_force=True)
+        self.fc7 = self.fc_layer(self.relu6, 4096, last_layers[0], "fc7", load_weight_force=True)
         self.relu7 = tf.nn.relu(self.fc7)
 
         # DROPOUT
         if self.trainable is True:
             self.relu7 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu7, self.dropout), lambda: self.relu7)
 
-        self.fc8 = self.fc_layer_sigmoid(self.relu7, 4096, last_layers[0], "fc8")
-
-        self.fc9 = self.fc_layer(self.fc8, last_layers[0], last_layers[1], "fc9")
-        self.prob = tf.nn.softmax(self.fc9, name="prob")
+        self.fc8 = self.fc_layer(self.relu7, last_layers[0], last_layers[1], "fc8")
+        self.prob = tf.nn.softmax(self.fc8, name="prob")
 
         # COST - TRAINING
         self.cost = tf.reduce_mean((self.prob - target) ** 2)
-        # self.train = tf.train.AdamOptimizer(self.learning_rate).minimize(self.cost)
-        self.train = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.cost)
+        self.train = tf.train.AdamOptimizer(self.learning_rate).minimize(self.cost)
+        #self.train = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.cost)
 
         self.data_dict = None
         print(("build model finished: %ds" % (time.time() - start_time)))

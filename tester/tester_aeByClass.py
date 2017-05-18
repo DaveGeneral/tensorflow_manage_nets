@@ -73,7 +73,7 @@ def test_model_all(net, sess_test, objData, numClass):
         y_result.append(np.argsort(cost_class)[0])
         objData.next_batch_test()
 
-    utils.metrics(y_true, y_result)
+    utils.metrics_multiclass(y_true, y_result)
 
 
 # Plot example reconstructions
@@ -94,33 +94,13 @@ def plot_result(net, sess, batch, n_examples=5):
 #                   son tres fuentes de datos
 
 
-num_class = 2
+num_class = 10
 # ..................................................................
 
 # GLOBAL VARIABLES
-# path = '../data/features_cifar10_vgg/'
-# path_data_train_all = [path + 'output_trainVGG_fc6.csv']
-# path_data_test_all = [path + 'output_testVGG_fc6.csv']
-#
-# path_weight = '../weight/vgg_cifar10/'
-# path_load_weight_all = None
-# path_save_weight_all = path_weight + 'vggAE_all.npy'
-#
-# path_data_train_class = []
-# path_data_test_class = []
-# path_load_weight = []
-# path_save_weight = []
-#
-# for i in range(num_class):
-#     path_data_test_class.append([path + 'output_testVGG_fc6_class'+str(i)+'.csv'])
-#     path_data_train_class.append([path + 'output_trainVGG_fc6_class' + str(i) + '.csv'])
-#     path_load_weight.append(path_weight + 'vggAE_all.npy')
-#     path_save_weight.append(path_weight + 'vggAE_class'+str(i)+'.npy')
-
-
-path = '../data/features/testskin1/muestraA/'
-path_data_train_all = [path + 'SKINfeaturesA_Train.csv']
-path_data_test_all = [path + 'SKINfeaturesA_Test.csv']
+path = '../data/features_cifar10_vgg/'
+path_data_train_all = [path + 'output_trainVGG_fc6.csv']
+path_data_test_all = [path + 'output_testVGG_fc6.csv']
 
 path_weight = '../weight/vgg_cifar10/'
 path_load_weight_all = None
@@ -132,10 +112,30 @@ path_load_weight = []
 path_save_weight = []
 
 for i in range(num_class):
-    path_data_test_class.append([path + 'SKINfeaturesA_Test_class'+str(i)+'.csv'])
-    path_data_train_class.append([path + 'SKINfeaturesA_Train_class' + str(i) + '.csv'])
+    path_data_test_class.append([path + 'output_testVGG_fc6_class'+str(i)+'.csv'])
+    path_data_train_class.append([path + 'output_trainVGG_fc6_class' + str(i) + '.csv'])
     path_load_weight.append(path_weight + 'vggAE_all.npy')
     path_save_weight.append(path_weight + 'vggAE_class'+str(i)+'.npy')
+
+
+# path = '../data/features/testskin1/muestraA/'
+# path_data_train_all = [path + 'SKINfeaturesA_Train.csv']
+# path_data_test_all = [path + 'SKINfeaturesA_Test.csv']
+#
+# path_weight = '../weight/vgg_cifar10/'
+# path_load_weight_all = None
+# path_save_weight_all = path_weight + 'vggAE_all.npy'
+#
+# path_data_train_class = []
+# path_data_test_class = []
+# path_load_weight = []
+# path_save_weight = []
+#
+# for i in range(num_class):
+#     path_data_test_class.append([path + 'SKINfeaturesA_Test_class'+str(i)+'.csv'])
+#     path_data_train_class.append([path + 'SKINfeaturesA_Train_class' + str(i) + '.csv'])
+#     path_load_weight.append(path_weight + 'vggAE_all.npy')
+#     path_save_weight.append(path_weight + 'vggAE_class'+str(i)+'.npy')
 
 
 assert os.path.exists(path), print('No existe el directorio de datos ' + path)
@@ -145,9 +145,9 @@ if __name__ == '__main__':
 
     mini_batch_train = 25
     mini_batch_test = 30
-    epoch_all = 4
-    learning_rate_all = 0.000001
-    epoch_class = 20
+    epoch_all = 3
+    learning_rate_all = 0.0000001
+    epoch_class = 15
     learning_rate_class = 0.00001
 
     dim_input = 4096
@@ -215,7 +215,7 @@ if __name__ == '__main__':
             # SAVE WEIGHTs
             AEncode.save_npy(sess, path_save_weight[i])
 
-            print('--------------------------------------')
+            print('------------------------------------------------------')
             del AEncode
             del data_train
             del data_test

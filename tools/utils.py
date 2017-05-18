@@ -8,7 +8,7 @@ import itertools
 import matplotlib.pyplot as plt
 from pathlib import Path
 from sklearn.metrics import confusion_matrix, average_precision_score, roc_curve, roc_auc_score
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import precision_recall_curve, f1_score, accuracy_score
 from sklearn.preprocessing import label_binarize
 from itertools import cycle
 # synset = [l.strip() for l in open('synset.txt').readlines()]
@@ -288,6 +288,25 @@ def metrics(y_true=[], y_pred=[], plot_pred=[], plot_graph=False):
         plot_curve_roc([y_true], [plot_pred])
 
     return accuracy1
+
+
+def metrics_multiclass(y_true=[], y_pred=[]):
+
+    cm1 = confusion_matrix(y_true=y_true, y_pred=y_pred)
+    total1 = sum(sum(cm1))
+
+    accuracy = accuracy_score(y_true, y_pred)
+    total_score = accuracy_score(y_true, y_pred, normalize=False)
+    f1_macro = f1_score(y_true, y_pred, average='macro')
+    f1_micro = f1_score(y_true, y_pred, average='micro')
+    f1_weighted = f1_score(y_true, y_pred, average='weighted')
+
+    print('Confusion Matrix : \n', cm1)  
+    print('Total Correct: ', total_score)
+    print('Accuracy     : ', accuracy)
+    print('F1-macro     : ', f1_macro)
+    print('F1-micro     : ', f1_micro)
+    print('F1-weighted  : ', f1_weighted)
 
 
 def plot_curve_roc(y_true, y_pred, title=None):

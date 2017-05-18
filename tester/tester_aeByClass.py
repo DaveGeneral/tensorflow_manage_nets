@@ -95,12 +95,13 @@ def plot_result(net, sess, batch, n_examples=5):
 
 
 num_class = 10
+capa = 'relu6'
 # ..................................................................
 
 # GLOBAL VARIABLES
 path = '../data/features_cifar10_vgg/'
-path_data_train_all = [path + 'output_trainVGG_fc6.csv']
-path_data_test_all = [path + 'output_testVGG_fc6.csv']
+path_data_train_all = [path + 'output_trainVGG_'+capa+'.csv']
+path_data_test_all = [path + 'output_testVGG_'+capa+'.csv']
 
 path_weight = '../weight/vgg_cifar10/'
 path_load_weight_all = None
@@ -112,8 +113,8 @@ path_load_weight = []
 path_save_weight = []
 
 for i in range(num_class):
-    path_data_test_class.append([path + 'output_testVGG_fc6_class'+str(i)+'.csv'])
-    path_data_train_class.append([path + 'output_trainVGG_fc6_class' + str(i) + '.csv'])
+    path_data_test_class.append([path + 'output_testVGG_'+capa+'_class'+str(i)+'.csv'])
+    path_data_train_class.append([path + 'output_trainVGG_'+capa+'_class' + str(i) + '.csv'])
     path_load_weight.append(path_weight + 'vggAE_all.npy')
     path_save_weight.append(path_weight + 'vggAE_class'+str(i)+'.npy')
 
@@ -170,7 +171,9 @@ if __name__ == '__main__':
     print('-------------')
 
     data_train = Dataset_csv(path_data=path_data_train_all, minibatch=mini_batch_train, max_value=Damax)
+    print('Load data train...')
     data_test = Dataset_csv(path_data=path_data_test_all, minibatch=mini_batch_test, max_value=Damax, random=False)
+    print('Load data test...')
 
     with tf.Session(config=c) as sess:
 

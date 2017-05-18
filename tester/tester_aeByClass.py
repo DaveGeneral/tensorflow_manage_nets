@@ -159,7 +159,7 @@ if __name__ == '__main__':
     Damax = data_normal.amax
     del data_normal
 
-    # utils.generate_max_csvData([path_data_train_dual[0], path_data_test_dual[0]], path+'maximo.csv', has_label=True)
+    # utils.generate_max_csvData([path_data_train_all[0], path_data_test_all[0]], path+'maximo.csv', has_label=True)
     # Damax = utils.load_max_csvData(path+'maximo.csv')
 
     c = tf.ConfigProto()

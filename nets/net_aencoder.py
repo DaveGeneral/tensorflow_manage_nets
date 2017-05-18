@@ -35,7 +35,7 @@ class AEncoder:
             n_input = current_input.get_shape().as_list()[1]
             name = 'encodeFC_' + str(i)
 
-            self.net[name] = self.fc_layer_sigm(current_input, n_input, n_output, name)
+            self.net[name] = self.fc_layer(current_input, n_input, n_output, name)
             current_input = self.net[name]
 
         #
@@ -48,7 +48,7 @@ class AEncoder:
         for i, shape in enumerate(shapes):
             name = 'decodeFC_' + str(i)
             n_input = current_input.get_shape().as_list()[1]
-            self.net[name] = self.fc_layer_sigm_decode(current_input, n_input, shape[1], i, name)
+            self.net[name] = self.fc_layer_decode(current_input, n_input, shape[1], i, name)
             current_input = self.net[name]
 
         self.y = current_input
@@ -84,6 +84,18 @@ class AEncoder:
     def fc_layer(self, bottom, in_size, out_size, name):
         with tf.variable_scope(name):
             weights, biases = self.get_fc_var(in_size, out_size, name)
+
+            x = tf.reshape(bottom, [-1, in_size])
+            fc = tf.nn.bias_add(tf.matmul(x, weights), biases)
+            return fc
+
+    def fc_layer_decode(self, bottom, in_size, out_size, index, name):
+        with tf.variable_scope(name):
+            initial_value = tf.transpose(self.encoder_w[index])
+            weights = self.get_var_fc(initial_value, name, 0, name + "_weights")
+
+            initial_value = tf.zeros([out_size])
+            biases = self.get_var_fc(initial_value, name, 1, name + "_biases")
 
             x = tf.reshape(bottom, [-1, in_size])
             fc = tf.nn.bias_add(tf.matmul(x, weights), biases)

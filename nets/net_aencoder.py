@@ -19,7 +19,7 @@ class AEncoder:
         self.encoder_w = []
         self.net = {}
 
-    def build(self, input_batch, l_hidden=[2048, 1024]):
+    def build(self, input_batch, l_hidden=[[2048,''], [1024,'']]):
 
         start_time = time.time()
 
@@ -29,13 +29,26 @@ class AEncoder:
         # BUILD THE ENCODER
         # -----------------
         shapes = []
+        activation = []
         self.x = current_input
         for i, n_output in enumerate(l_hidden[0:]):
             shapes.append(current_input.get_shape().as_list())
             n_input = current_input.get_shape().as_list()[1]
             name = 'encodeFC_' + str(i)
 
-            self.net[name] = self.fc_layer(current_input, n_input, n_output, name)
+            try:
+                active = n_output[1]
+                activation.append(active)
+                if active == 'relu':
+                    self.net[name] = tf.nn.relu(self.fc_layer(current_input, n_input, n_output[0], name))
+                elif active == 'sigmoid':
+                    self.net[name] = tf.nn.sigmoid(self.fc_layer(current_input, n_input, n_output[0], name))
+                else:
+                    self.net[name] = self.fc_layer(current_input, n_input, n_output[0], name)
+            except:
+                activation.append('')
+                self.net[name] = self.fc_layer(current_input, n_input, n_output[0], name)
+
             current_input = self.net[name]
 
         #
@@ -44,11 +57,24 @@ class AEncoder:
         self.z = current_input
         self.encoder_w.reverse()
         shapes.reverse()
+        activation.reverse()
 
         for i, shape in enumerate(shapes):
-            name = 'decodeFC_' + str(i)
             n_input = current_input.get_shape().as_list()[1]
-            self.net[name] = self.fc_layer_decode(current_input, n_input, shape[1], i, name)
+            name = 'decodeFC_' + str(i)
+
+            try:
+                active =activation[i]
+                if active == 'relu':
+                    self.net[name] = tf.nn.relu(self.fc_layer_decode(current_input, n_input, shape[1], i, name))
+                elif active == 'sigmoid':
+                    self.net[name] = tf.nn.sigmoid(self.fc_layer_decode(current_input, n_input, shape[1], i, name))
+                else:
+                    self.net[name] = self.fc_layer_decode(current_input, n_input, shape[1], i, name)
+            except:
+                self.net[name] = self.fc_layer_decode(current_input, n_input, shape[1], i, name)
+
+            # self.net[name] = self.fc_layer_decode(current_input, n_input, shape[1], i, name)
             current_input = self.net[name]
 
         self.y = current_input

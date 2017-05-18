@@ -120,7 +120,7 @@ for i in range(num_class):
     path_save_weight.append(path_weight + 'vggAE_class'+str(i)+'.npy')
 
 
-# path = '../data/features/testskin1/muestraA/'
+# path = '../data/features/muestraA/'
 # path_data_train_all = [path + 'SKINfeaturesA_Train.csv']
 # path_data_test_all = [path + 'SKINfeaturesA_Test.csv']
 #
@@ -132,7 +132,7 @@ for i in range(num_class):
 # path_data_test_class = []
 # path_load_weight = []
 # path_save_weight = []
-#
+
 # for i in range(num_class):
 #     path_data_test_class.append([path + 'SKINfeaturesA_Test_class'+str(i)+'.csv'])
 #     path_data_train_class.append([path + 'SKINfeaturesA_Train_class' + str(i) + '.csv'])
@@ -148,12 +148,12 @@ if __name__ == '__main__':
     mini_batch_train = 25
     mini_batch_test = 30
     epoch_all = 3
-    learning_rate_all = 0.00000001
-    epoch_class = 15
+    learning_rate_all = 0.0000001
+    epoch_class = 10
     learning_rate_class = 0.00001
 
     dim_input = 4096
-    layers = [1024, 256]
+    layers = [[1024,'relu'], [256,'relu']]
 
     # Datos de valor maximo
     data_normal = Dataset_csv(path_data=[path_data_train_all[0], path_data_test_all[0]], random=False)
@@ -168,8 +168,8 @@ if __name__ == '__main__':
     # -------------------------------------------------------------------
     # ENTRENAMOS EL AUTOENCODER CON AMBAS CLASES - GENERAMOS UN PESO BASE
     # -------------------------------------------------------------------
-    print('AE TRAIN DUAL')
-    print('-------------')
+    print('AE TRAIN ALL')
+    print('------------')
 
     data_train = Dataset_csv(path_data=path_data_train_all, minibatch=mini_batch_train, max_value=Damax)
     print('Load data train...')
@@ -213,13 +213,13 @@ if __name__ == '__main__':
             AEncode.build(x_batch, layers)
             sess.run(tf.global_variables_initializer())
 
-            print('\nOriginal Cost CLASS '+str(i)+': ', test_model(AEncode, sess, data_test))
+            print('Original Cost CLASS '+str(i)+': ', test_model(AEncode, sess, data_test))
             train_model(AEncode, sess, data_train, objDatatest=data_test, epoch=epoch_class)
 
             # SAVE WEIGHTs
             AEncode.save_npy(sess, path_save_weight[i])
 
-            print('------------------------------------------------------')
+            print('\n------------------------------------------------------')
             del AEncode
             del data_train
             del data_test
@@ -266,8 +266,8 @@ if __name__ == '__main__':
             AEncode.build(x_batch, layers)
             sess.run(tf.global_variables_initializer())
 
-            print('\nOriginal Cost CLASS ' + str(i) + ': ', test_model(AEncode, sess, data_test, index=i))
-            print('------------------------------------------------------')
+            print('Original Cost CLASS ' + str(i) + ': ', test_model(AEncode, sess, data_test, index=i))
+            print('\n------------------------------------------------------')
             del AEncode
             del data_train
             del data_test

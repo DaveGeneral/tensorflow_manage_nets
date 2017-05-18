@@ -70,7 +70,7 @@ def test_model_all(net, sess_test, objData, numClass):
             cost_i = sess_test.run(net[class_i].cost, feed_dict={x_batch: x_})
             cost_class.append(cost_i)
 
-        y_result.append(np.argsort(cost_class)[::-1][0])
+        y_result.append(np.argsort(cost_class)[0])
         objData.next_batch_test()
 
     utils.metrics(y_true, y_result)

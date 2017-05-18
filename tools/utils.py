@@ -261,7 +261,7 @@ def plot_confusion_matrix(cm, classes,
     plt.xlabel('Predicted label')
 
 
-def metrics(y_true, y_pred, plot_prod, plot_graph=False):
+def metrics(y_true=[], y_pred=[], plot_pred=[], plot_graph=False):
 
     cm1 = confusion_matrix(y_true=y_true, y_pred=y_pred)
     total1 = sum(sum(cm1))
@@ -285,7 +285,7 @@ def metrics(y_true, y_pred, plot_prod, plot_graph=False):
     print('Area Under RCO : ', area_under_roc)
 
     if plot_graph is True:
-        plot_curve_roc([y_true], [plot_prod])
+        plot_curve_roc([y_true], [plot_pred])
 
     return accuracy1
 

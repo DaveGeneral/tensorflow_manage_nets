@@ -12,11 +12,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 
 if switch_server is True:
     from tools import utils
-    from nets import net_aencoder as AE
+    from nets import net_aencoder_noise as AE
     from tools.dataset_csv import Dataset_csv
 else:
     from tensorflow_manage_nets.tools import utils
-    from tensorflow_manage_nets.nets import net_aencoder as AE
+    from tensorflow_manage_nets.nets import net_aencoder_noise as AE
     from tensorflow_manage_nets.tools.dataset_csv import Dataset_csv
 
 # ..................................................................

@@ -4,10 +4,10 @@ import numpy as np
 
 
 class AEncoder:
-    def __init__(self, npy_path=None, trainable=True, learning_rate=0.001, dropout=0.5):
+    def __init__(self, npy_path=None, trainable=True, learning_rate=0.001, dropout=0.5, noise=0.0):
         if npy_path is not None:
             self.data_dict = np.load(npy_path, encoding='latin1').item()
-            print("npy file loaded ", npy_path)
+            print("npy file loaded")
         else:
             self.data_dict = None
             print("random weight")
@@ -18,12 +18,13 @@ class AEncoder:
         self.dropout = dropout
         self.encoder_w = []
         self.net = {}
+        self.noise = noise
 
-    def build(self, input_batch, l_hidden=[2048, 1024]):
+    def build(self, input_batch, input_mask, noise_mode=True, l_hidden=[2048, 1024]):
 
         start_time = time.time()
-
-        current_input = input_batch
+        # current_input = input_batch * input_mask
+        current_input = tf.cond(noise_mode, lambda: input_batch * input_mask, lambda: input_batch)
 
         #
         # BUILD THE ENCODER

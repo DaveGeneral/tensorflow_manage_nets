@@ -146,7 +146,7 @@ if __name__ == '__main__':
     del data_normal
 
     # utils.generate_max_csvData([path_data_train_dual[0], path_data_test_dual[0]], path+'maximo.csv', has_label=True)
-    # Damax = np.array(utils.load_max_csvData(path+'maximo.csv'))
+    # Damax = utils.load_max_csvData(path+'maximo.csv')
 
     # -------------------------------------------------------------------
     # ENTRENAMOS EL AUTOENCODER CON AMBAS CLASES - GENERAMOS UN PESO BASE

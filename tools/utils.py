@@ -387,8 +387,8 @@ def load_max_csvData(path_max):
     with open(path_max, 'r') as f:
         reader = csv.reader(f)
         data = list(reader)
-        print(np.float_(data)[0])
 
+    print('Load file ', path_max, ' generate max array.')
     return np.float_(data)[0]
 
 

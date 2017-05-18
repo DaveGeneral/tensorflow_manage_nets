@@ -109,7 +109,7 @@ if __name__ == '__main__':
     data_normal = Dataset_csv(path_data=[path_data_train[0], path_data_test[0]], random=False)
     Damax = data_normal.amax
     # utils.generate_max_csvData([path_data_train[0], path_data_test[0]], path+'maximo.csv', has_label=True)
-    # Damax = np.array(utils.load_max_csvData(path+'maximo.csv'))
+    # Damax = utils.load_max_csvData(path+'maximo.csv')
 
     # Load data train
     data_train = Dataset_csv(path_data=path_data_train, minibatch=mini_batch_train, max_value=Damax, restrict=True)

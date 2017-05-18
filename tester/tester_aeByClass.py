@@ -24,7 +24,7 @@ else:
 
 
 # Función, fase de test
-def test_model(net, sess_test, objData):
+def test_model(net, sess_test, objData, index=0):
 
     total = objData.total_inputs
     cost_total = 0
@@ -32,8 +32,9 @@ def test_model(net, sess_test, objData):
     for i in range(objData.total_batchs_complete):
 
         x_, label = objData.generate_batch()
-        cost = sess_test.run(net.cost, feed_dict={x_batch: x_})
+        cost, layer = sess_test.run([net.cost, net.net['encodeFC_1']], feed_dict={x_batch: x_})
 
+        # utils.save_layer_output(layer, label, name='endoce_cifar10_256_class'+str(index), dir='../data/features_cifar10_vgg/')
         cost_total = cost_total + cost
         objData.next_batch_test()
 
@@ -147,12 +148,12 @@ if __name__ == '__main__':
     mini_batch_train = 25
     mini_batch_test = 30
     epoch_all = 3
-    learning_rate_all = 0.0000001
+    learning_rate_all = 0.00000001
     epoch_class = 15
     learning_rate_class = 0.00001
 
     dim_input = 4096
-    layers = [2048, 1024]
+    layers = [1024, 256]
 
     # Datos de valor maximo
     data_normal = Dataset_csv(path_data=[path_data_train_all[0], path_data_test_all[0]], random=False)
@@ -244,3 +245,29 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
         test_model_all(AEclass, sess, data_test_dual, num_class)
 
+    # -------------------------------------------------------------------
+    #                          GENERAMOS CSV DE LA CAPA X
+    # -------------------------------------------------------------------
+    print()
+    print('SAVE LAYER')
+    print('----------')
+
+    with tf.Session(config=c) as sess:
+
+        x_batch = tf.placeholder(tf.float32, [None, dim_input])
+
+        for i in range(num_class):
+            data_train = Dataset_csv(path_data=path_data_train_class[i], minibatch=mini_batch_train,
+                                     max_value=Damax, restrict=False)
+            data_test = Dataset_csv(path_data=path_data_test_class[i], minibatch=mini_batch_test, max_value=Damax,
+                                    restrict=False, random=False)
+
+            AEncode = AE.AEncoder(path_save_weight[i], learning_rate=learning_rate_class)
+            AEncode.build(x_batch, layers)
+            sess.run(tf.global_variables_initializer())
+
+            print('\nOriginal Cost CLASS ' + str(i) + ': ', test_model(AEncode, sess, data_test, index=i))
+            print('------------------------------------------------------')
+            del AEncode
+            del data_train
+            del data_test

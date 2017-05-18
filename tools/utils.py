@@ -3,7 +3,7 @@ import skimage.io
 import skimage.transform
 import numpy as np
 from datetime import datetime
-import sys, os
+import sys, os, csv
 import itertools
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -353,6 +353,43 @@ def precision_recall(y_true, y_prob, num_class):
     plt.title('Extension of Precision-Recall curve to multi-class')
     plt.legend(loc="lower right")
     plt.show()
+
+
+def generate_max_csvData(sources, path_save, has_label=True, no_NaN=True):
+    max_i = []
+    for file in sources:
+        with open(file, 'r') as f:
+            reader = csv.reader(f)
+            data = list(reader)
+            max_i.append(np.amax(np.float_(data), axis=0))
+
+    if has_label is True:
+        maximo = np.amax(max_i, axis=0)[:-1]
+    else:
+        maximo = np.amax(max_i, axis=0)
+
+    myMax = max(maximo)
+    myMin = min(maximo)
+
+    if myMin == 0.0 and no_NaN == True:
+        maximo[maximo == 0] = 0.0001
+
+    myMin = min(maximo)
+
+    f = open(path_save, "w")
+    f.write(",".join(map(str, maximo)) + "\n")
+    f.close()
+    print("Save max vector, Dim =", str(len(maximo)), ', min =', myMin, ', max =', myMax)
+
+
+def load_max_csvData(path_max):
+
+    with open(path_max, 'r') as f:
+        reader = csv.reader(f)
+        data = list(reader)
+        print(np.float_(data)[0])
+
+    return np.float_(data)[0]
 
 
 def directory_exist(pathname):

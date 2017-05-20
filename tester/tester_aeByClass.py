@@ -34,7 +34,7 @@ def test_model(net, sess_test, objData, index=0):
         x_, label = objData.generate_batch()
         cost, layer = sess_test.run([net.cost, net.net['encodeFC_1']], feed_dict={x_batch: x_})
 
-        # utils.save_layer_output(layer, label, name='endoce_cifar10_256_class'+str(index), dir='../data/features_cifar10_vgg/')
+        #utils.save_layer_output(layer, label, name='endoce_cifar10_relu_256_class'+str(index), dir='../data/MNIST_data/')
         cost_total = cost_total + cost
         objData.next_batch_test()
 
@@ -149,19 +149,19 @@ if __name__ == '__main__':
     mini_batch_test = 30
     epoch_all = 3
     learning_rate_all = 0.0000001
-    epoch_class = 10
+    epoch_class = 3
     learning_rate_class = 0.00001
 
     dim_input = 4096
     layers = [[1024,'relu'], [256,'relu']]
 
     # Datos de valor maximo
-    data_normal = Dataset_csv(path_data=[path_data_train_all[0], path_data_test_all[0]], random=False)
-    Damax = data_normal.amax
-    del data_normal
+    #data_normal = Dataset_csv(path_data=[path_data_train_all[0], path_data_test_all[0]], random=False)
+    #Damax = data_normal.amax
+    #del data_normal
 
     # utils.generate_max_csvData([path_data_train_all[0], path_data_test_all[0]], path+'maximo.csv', has_label=True)
-    # Damax = utils.load_max_csvData(path+'maximo.csv')
+    Damax = utils.load_max_csvData(path+'maximo.csv')
 
     c = tf.ConfigProto()
     c.gpu_options.visible_device_list = "1,2"
@@ -223,7 +223,6 @@ if __name__ == '__main__':
             del AEncode
             del data_train
             del data_test
-
     # -------------------------------------------------------------------
     #                   CLASIFICACION CON AUTOENCODERS
     # -------------------------------------------------------------------
@@ -266,8 +265,11 @@ if __name__ == '__main__':
             AEncode.build(x_batch, layers)
             sess.run(tf.global_variables_initializer())
 
-            print('Original Cost CLASS ' + str(i) + ': ', test_model(AEncode, sess, data_test, index=i))
+            print('Original Cost CLASS ' + str(i) + ': ', test_model(AEncode, sess, data_train, index=i))
             print('\n------------------------------------------------------')
             del AEncode
             del data_train
             del data_test
+
+
+

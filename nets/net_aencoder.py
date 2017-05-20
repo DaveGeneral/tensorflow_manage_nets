@@ -19,7 +19,7 @@ class AEncoder:
         self.encoder_w = []
         self.net = {}
 
-    def build(self, input_batch, l_hidden=[[2048,''], [1024,'']]):
+    def build(self, input_batch, l_hidden=[[2048,'relu'], [1024,'relu']]):
 
         start_time = time.time()
 

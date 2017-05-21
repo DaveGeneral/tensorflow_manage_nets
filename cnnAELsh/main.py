@@ -61,7 +61,7 @@ if __name__ == '__main__':
     print('SEARCH SAMPLES')
     print('--------------')
 
-    data_train = Dataset_csv(path_data=path_data_train_all, minibatch=30, max_value=1, restrict=False, random=True)
+    #data_train = Dataset_csv(path_data=path_data_train_all, minibatch=30, max_value=1, restrict=False, random=True)
     data = Dataset_csv(path_data=path_data_test_all, minibatch=30, max_value=1, restrict=False, random=False)
 
     with tf.device('/cpu:0'):
@@ -79,6 +79,8 @@ if __name__ == '__main__':
             calsh.test_vgg(data, normalizate=False)
             # Prueba el error de reconstruccion del Autoencoder
             calsh.test_ae_global(data, normalizate=True)
+            # Prueba de clasificacion con Autoencoders
+            calsh.test_ae_class(data, normalizate=True)
             # Genera un CSV de la data codificada, de tamaño 512
             calsh.generate_data_encode(data, path_save=path, csv_name="encode_test_512", normalizate=True)
 

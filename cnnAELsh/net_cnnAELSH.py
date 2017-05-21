@@ -120,9 +120,9 @@ class cnn_ae_lsh:
         utils.metrics_multiclass(y_true, y_prob)
 
     # TEST AUTO-ENCODER
-    def test_ae_global(self, objData, normalizate=False):
+    def test_ae_global(self, objData, normalize=False):
 
-        if normalizate is True:
+        if normalize is True:
             objData.normalization(self.normalization_max)
 
         total = objData.total_inputs
@@ -136,9 +136,29 @@ class cnn_ae_lsh:
 
         print(cost_total, cost_total / total)
 
+    # TEST AUTO-ENCODER BY CLASS
+    def test_ae_class(self, objData, normalize=False):
+
+        if normalize is True:
+            objData.normalization(self.normalization_max)
+
+        y_true = objData.labels
+        y_result = []
+
+        for ix in range(objData.total_batchs_complete):
+            x_, label = objData.generate_batch()
+            cost_class = []
+            for class_i in range(self.num_class):
+                cost_i = self.sess.run(self.AEclass[class_i].cost, feed_dict={self.x_batch: x_})
+                cost_class.append(cost_i)
+
+            y_result.append(np.argsort(cost_class)[0])
+            objData.next_batch_test()
+        utils.metrics_multiclass(y_true, y_result)
+
     # GENERATE DATA ENCODE
-    def generate_data_encode(self, objData, path_save='', csv_name='encode', normalizate=False):
-        if normalizate is True:
+    def generate_data_encode(self, objData, path_save='', csv_name='encode', normalize=False):
+        if normalize is True:
             objData.normalization(self.normalization_max)
 
         total = objData.total_inputs
@@ -161,12 +181,13 @@ class cnn_ae_lsh:
         for i in range(len(sample)):
             x_ = [sample[i]]
             # cost_class = []
-            for class_i in range(self.num_class):
-                probability = self.sess.run(self.probVGG, feed_dict={self.x_batch: x_})
-                # cost_class.append(cost_i)
 
-            probability = np.array(probability)
-            res = np.argsort(probability)
+            probability = self.sess.run(self.probVGG, feed_dict={self.x_batch: x_})
+            # cost_class.append(cost_i)
+
+            #print(probability, probability.shape)
+            probability = np.array(probability[0])
+            res = np.argsort(probability)[::-1]
             y_result.append([res, probability[res]])
 
         return y_result

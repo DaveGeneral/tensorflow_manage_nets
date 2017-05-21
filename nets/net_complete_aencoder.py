@@ -45,13 +45,15 @@ class ae_multiClass:
 
         y_result = []
         for i in range(len(sample)):
-
-            x_ = sample[i]
+            x_ = [sample[i]]
             cost_class = []
             for class_i in range(self.num_class):
                 cost_i = self.sess.run(self.AEclass[class_i].cost, feed_dict={self.x_batch: x_})
                 cost_class.append(cost_i)
 
-            y_result.append(np.argsort(cost_class))
+            cost_class = np.array(cost_class)
+            res = np.argsort(cost_class)
+            y_result.append([res, cost_class[res]])
 
         return y_result
+

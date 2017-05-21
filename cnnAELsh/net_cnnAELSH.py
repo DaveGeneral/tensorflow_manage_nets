@@ -49,13 +49,11 @@ class cnn_ae_lsh:
         self.trainable = trainable
         self.weight_ae_path = npy_ae_path
         self.weight_ae_class_paths = npy_ae_class_paths
-
-
-
         self.num_class = num_class
         self.AEclass = []
-        self.threshold = threshold
         self.sess = session
+
+        self.threshold = threshold
 
     def build(self, dim_input, layers=None):
 
@@ -81,11 +79,18 @@ class cnn_ae_lsh:
         # ---------------------
         # AUTOENCODERS BY CLASS
 
+        for i in range(self.num_class):
+            self.AEclass.append(AE.AEncoder(self.weight_ae_class_paths[i]))
+            self.AEclass[i].build(self.x_batch, layers)
+
         self.sess.run(tf.global_variables_initializer())
         print(("build model finished: %ds" % (time.time() - start_time)))
 
     # TEST VGG
-    def test_vgg(self, objData):
+    def test_vgg(self, objData, normalizate=False):
+
+        if normalizate is True:
+            objData.normalization(self.normalization_max)
 
         count_success = 0
         prob_predicted = []
@@ -115,7 +120,7 @@ class cnn_ae_lsh:
         utils.metrics_multiclass(y_true, y_prob)
 
     # TEST AUTO-ENCODER
-    def train_ae_global(self, objData, normalizate=True):
+    def test_ae_global(self, objData, normalizate=False):
 
         if normalizate is True:
             objData.normalization(self.normalization_max)
@@ -131,12 +136,25 @@ class cnn_ae_lsh:
 
         print(cost_total, cost_total / total)
 
+    # GENERATE DATA ENCODE
+    def generate_data_encode(self, objData, path_save='', csv_name='encode', normalizate=False):
+        if normalizate is True:
+            objData.normalization(self.normalization_max)
 
+        total = objData.total_inputs
+        cost_total = 0
 
+        for i in range(objData.total_batchs_complete):
+            x_, label = objData.generate_batch()
+            cost, layer = self.sess.run([self.AEGlobal.cost, self.AEGlobal.net['encodeFC_1']], feed_dict={self.x_batch: x_})
+            utils.save_layer_output(layer, label, name=csv_name, dir=path_save)
 
+            cost_total = cost_total + cost
+            objData.next_batch_test()
 
+        print(cost_total, cost_total / total)
 
-
+    # TEST SEARCH
     def search_sample(self, sample):
 
         y_result = []
@@ -153,6 +171,11 @@ class cnn_ae_lsh:
 
         return y_result
 
+
+
+    # -----------------------------------------------------------------
+    # Funciones secunadarias
+    # -----------------------------------------------------------------
     # Layer FullConnected
     def fc_layer(self, bottom, in_size, out_size, name):
         with tf.variable_scope(name):

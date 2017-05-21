@@ -32,6 +32,7 @@ num_class = 10
 path = '../data/features_cifar10_vgg/'
 path_data_train_all = [path + 'output_trainVGG_relu6.csv']
 path_data_test_all = [path + 'output_testVGG_relu6.csv']
+path_normalization_max = path + 'maximo.csv'
 
 # PESOS ENTRENADOS
 path_weight = '../weight/vgg_cifar10/'
@@ -52,7 +53,7 @@ if __name__ == '__main__':
     # del data_normal
 
     # utils.generate_max_csvData([path_data_train_all[0], path_data_test_all[0]], path+'maximo.csv', has_label=True)
-    Damax = utils.load_max_csvData(path + 'maximo.csv')
+    # Damax = utils.load_max_csvData(path + 'maximo.csv')
 
     c = tf.ConfigProto()
     c.gpu_options.visible_device_list = "1,2"
@@ -60,6 +61,7 @@ if __name__ == '__main__':
     print('SEARCH SAMPLES')
     print('--------------')
 
+    data_train = Dataset_csv(path_data=path_data_train_all, minibatch=30, max_value=1, restrict=False, random=True)
     data = Dataset_csv(path_data=path_data_test_all, minibatch=30, max_value=1, restrict=False, random=False)
 
     with tf.device('/cpu:0'):
@@ -67,10 +69,13 @@ if __name__ == '__main__':
             calsh = CAL.cnn_ae_lsh(session=sess,
                                    npy_convol_path=path_w_cnn,
                                    npy_ae_path=path_w_ae_all,
-                                   normal_max_path=path + 'maximo.csv',
+                                   normal_max_path=path_normalization_max,
                                    num_class=num_class)
+
             calsh.build(dim_input=dim_input, layers=layers)
-            calsh.train_ae_global(data, normalizate=True)
+            calsh.test_vgg()
+            calsh.test_ae_global(data, normalizate=True)
+            calsh.generate_data_encode(data, path_save=path, csv_name="encode_test_256", normalizate=True)
 
             # for i in range(data.total_batchs_complete):
             #     x, label = data.generate_batch()

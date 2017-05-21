@@ -14,14 +14,23 @@ sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 if switch_server is True:
     from tools import utils
     from nets import net_aencoder as AE
+    from tools.dataset_csv import Dataset_csv
 else:
     from tensorflow_manage_nets.tools import utils
     from tensorflow_manage_nets.nets import net_aencoder as AE
+    from tensorflow_manage_nets.tools.dataset_csv import Dataset_csv
 
 
 class cnn_ae_lsh:
 
-    def __init__(self, session, npy_convol_path=None, npy_ae_paths=None, npy_ae_class_paths=None, trainable=False, num_class=0, threshold=0):
+    def __init__(self, session,
+                 npy_convol_path=None,
+                 npy_ae_path=None,
+                 npy_ae_class_paths=None,
+                 normal_max_path = None,
+                 trainable=False,
+                 num_class=0,
+                 threshold=0):
 
         if npy_convol_path is not None:
             self.data_dict = np.load(npy_convol_path, encoding='latin1').item()
@@ -30,10 +39,19 @@ class cnn_ae_lsh:
             self.data_dict = None
             print("random weight")
 
+        if normal_max_path is not None:
+            self.normalization_max = utils.load_max_csvData(normal_max_path)
+        else:
+            self.normalization_max = 1
+            print("Data no normalization")
+
         self.var_dict = {}
         self.trainable = trainable
+        self.weight_ae_path = npy_ae_path
+        self.weight_ae_class_paths = npy_ae_class_paths
 
-        self.weight_paths = npy_ae_paths
+
+
         self.num_class = num_class
         self.AEclass = []
         self.threshold = threshold
@@ -41,14 +59,83 @@ class cnn_ae_lsh:
 
     def build(self, dim_input, layers=None):
 
+        start_time = time.time()
+        print("build model started")
         self.x_batch = tf.placeholder(tf.float32, [None, dim_input])
 
-        # RED VGG ONLY MLP
+        # ----------------
+        # NET VGG ONLY MLP
+
         self.fc7 = self.fc_layer(self.x_batch, 4096, 4096, "fc7")
         self.relu7 = tf.nn.relu(self.fc7)
 
         self.fc8 = self.fc_layer(self.relu7, 4096, 10, "fc8")
         self.prob = tf.nn.softmax(self.fc8, name="prob")
+
+        # ------------------
+        # AUTOENCODER GLOBAL
+
+        self.AEGlobal = AE.AEncoder(self.weight_ae_path)
+        self.AEGlobal.build(self.x_batch, layers)
+
+        # ---------------------
+        # AUTOENCODERS BY CLASS
+
+        self.sess.run(tf.global_variables_initializer())
+        print(("build model finished: %ds" % (time.time() - start_time)))
+
+    # TEST VGG
+    def test_vgg(self, objData):
+
+        count_success = 0
+        prob_predicted = []
+        plot_predicted = []
+
+        label_total = []
+        prob_total = np.random.random((0, self.num_class))
+
+        print('\n# PHASE: Test classification')
+        for i in range(objData.total_batchs_complete):
+            batch, label = objData.generate_batch()
+            prob = self.sess.run(self.prob, feed_dict={self.x_batch: batch})
+
+            label_total = np.concatenate((label_total, label), axis=0)
+            prob_total = np.concatenate((prob_total, prob), axis=0)
+
+            # Acumulamos la presicion de cada iteracion, para despues hacer un promedio
+            count, prob_predicted, plot_predicted = utils.process_prob(label, prob, predicted=prob_predicted,
+                                                                       plot_predicted=plot_predicted)
+            count_success = count_success + count
+            objData.next_batch_test()
+
+        # promediamos la presicion total
+        print('\n# STATUS:')
+        y_true = objData.labels
+        y_prob = prob_predicted
+        utils.metrics_multiclass(y_true, y_prob)
+
+    # TEST AUTO-ENCODER
+    def train_ae_global(self, objData, normalizate=True):
+
+        if normalizate is True:
+            objData.normalization(self.normalization_max)
+
+        total = objData.total_inputs
+        cost_total = 0
+
+        for i in range(objData.total_batchs_complete):
+            x_, label = objData.generate_batch()
+            cost = self.sess.run(self.AEGlobal.cost, feed_dict={self.x_batch: x_})
+            cost_total = cost_total + cost
+            objData.next_batch_test()
+
+        print(cost_total, cost_total / total)
+
+
+
+
+
+
 
     def search_sample(self, sample):
 

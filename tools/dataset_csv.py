@@ -56,10 +56,10 @@ class Dataset_csv:
         else:
             self.amax = max_value
 
-        if media_mean is None:
-            self.media_mean = np.mean(self.inputs, axis=0)
-        else:
-            self.media_mean = media_mean
+        # if media_mean is None:
+        #     self.media_mean = np.mean(self.inputs, axis=0)
+        # else:
+        #     self.media_mean = media_mean
 
         self.inputs = self.inputs / self.amax
         self.labels = self.data.iloc[:, -1:].astype(int)
@@ -87,11 +87,9 @@ class Dataset_csv:
             self.shuffler()
 
     # Normalizamos la data entre 0 y 1 en base al valor maximo
-    def normalization(self, max=1.0):
-        self.amax = max
-        self.inputs = self.data.iloc[:, :-1]
-        self.inputs = self.inputs / self.amax
-        self.media_mean = np.mean(self.inputs, axis=0)
+    def normalization(self, max):
+
+        self.inputs = self.inputs / max
         print('Dataset normalizado.')
 
     #
@@ -109,7 +107,7 @@ class Dataset_csv:
         for i in range(start, end):
             # print(i)
             orig = self.inputs.iloc[i, :].values
-            mean = self.media_mean
+            # mean = self.media_mean
             batch_list.append(orig)
             label_list.append(self.labels.iloc[i, :].values[0])
 

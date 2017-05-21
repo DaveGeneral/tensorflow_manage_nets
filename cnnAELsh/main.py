@@ -71,18 +71,19 @@ if __name__ == '__main__':
                                    npy_ae_path=path_w_ae_all,
                                    npy_ae_class_paths=path_w_ae_class,
                                    normal_max_path=path_normalization_max,
-                                   num_class=num_class)
+                                   num_class=num_class,
+                                   threshold=0.2)
 
             calsh.build(dim_input=dim_input, layers=layers)
 
             # Prueba la presicion de la CNN-VGG
-            calsh.test_vgg(data, normalizate=False)
+            calsh.test_vgg(data, normalize=False)
             # Prueba el error de reconstruccion del Autoencoder
-            calsh.test_ae_global(data, normalizate=True)
+            calsh.test_ae_global(data, normalize=True)
             # Prueba de clasificacion con Autoencoders
-            calsh.test_ae_class(data, normalizate=True)
+            calsh.test_ae_class(data, normalize=True)
             # Genera un CSV de la data codificada, de tamaño 512
-            calsh.generate_data_encode(data, path_save=path, csv_name="encode_test_512", normalizate=True)
+            calsh.generate_data_encode(data, path_save=path, csv_name="encode_test_512", normalize=True)
 
             # Procesa la data ejemplo por ejemplo
             data.change_minibatch(1)

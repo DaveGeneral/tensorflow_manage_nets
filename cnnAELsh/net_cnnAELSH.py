@@ -87,9 +87,9 @@ class cnn_ae_lsh:
         print(("build model finished: %ds" % (time.time() - start_time)))
 
     # TEST VGG
-    def test_vgg(self, objData, normalizate=False):
+    def test_vgg(self, objData, normalize=False):
 
-        if normalizate is True:
+        if normalize is True:
             objData.normalization(self.normalization_max)
 
         count_success = 0
@@ -99,7 +99,7 @@ class cnn_ae_lsh:
         label_total = []
         prob_total = np.random.random((0, self.num_class))
 
-        print('\n# PHASE: Test classification')
+        print('\n# TEST VGG TRAINED')
         for i in range(objData.total_batchs_complete):
             batch, label = objData.generate_batch()
             prob = self.sess.run(self.probVGG, feed_dict={self.x_batch: batch})
@@ -128,6 +128,7 @@ class cnn_ae_lsh:
         total = objData.total_inputs
         cost_total = 0
 
+        print('\n# TEST AENCODER TRAINED')
         for i in range(objData.total_batchs_complete):
             x_, label = objData.generate_batch()
             cost = self.sess.run(self.AEGlobal.cost, feed_dict={self.x_batch: x_})
@@ -142,9 +143,13 @@ class cnn_ae_lsh:
         if normalize is True:
             objData.normalization(self.normalization_max)
 
+        minibatch_aux = objData.minibatch
+        objData.change_minibatch(1)
+
         y_true = objData.labels
         y_result = []
 
+        print('\n# TEST AENCODER BY CLASS TRAINED')
         for ix in range(objData.total_batchs_complete):
             x_, label = objData.generate_batch()
             cost_class = []
@@ -154,6 +159,8 @@ class cnn_ae_lsh:
 
             y_result.append(np.argsort(cost_class)[0])
             objData.next_batch_test()
+
+        objData.change_minibatch(minibatch_aux)
         utils.metrics_multiclass(y_true, y_result)
 
     # GENERATE DATA ENCODE
@@ -180,19 +187,17 @@ class cnn_ae_lsh:
         y_result = []
         for i in range(len(sample)):
             x_ = [sample[i]]
-            # cost_class = []
 
             probability = self.sess.run(self.probVGG, feed_dict={self.x_batch: x_})
-            # cost_class.append(cost_i)
-
-            #print(probability, probability.shape)
             probability = np.array(probability[0])
-            res = np.argsort(probability)[::-1]
-            y_result.append([res, probability[res]])
+
+            clss = np.argsort(probability)[::-1]
+            result = probability[clss]
+
+            index = np.argwhere(result >= self.threshold).reshape(-1)
+            y_result.append([clss[index], result[index]])
 
         return y_result
-
-
 
     # -----------------------------------------------------------------
     # Funciones secunadarias

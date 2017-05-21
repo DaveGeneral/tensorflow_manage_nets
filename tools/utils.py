@@ -293,7 +293,7 @@ def metrics(y_true=[], y_pred=[], plot_pred=[], plot_graph=False):
 def metrics_multiclass(y_true=[], y_pred=[]):
 
     cm1 = confusion_matrix(y_true=y_true, y_pred=y_pred)
-    total1 = sum(sum(cm1))
+    total = sum(sum(cm1))
 
     accuracy = accuracy_score(y_true, y_pred)
     total_score = accuracy_score(y_true, y_pred, normalize=False)
@@ -302,7 +302,7 @@ def metrics_multiclass(y_true=[], y_pred=[]):
     f1_weighted = f1_score(y_true, y_pred, average='weighted')
 
     print('Confusion Matrix : \n', cm1)  
-    print('Total Correct: ', total_score)
+    print('Total Correct: ', total_score, '/', total)
     print('Accuracy     : ', accuracy)
     print('F1-macro     : ', f1_macro)
     print('F1-micro     : ', f1_micro)

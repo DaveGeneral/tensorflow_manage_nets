@@ -184,7 +184,7 @@ class cnn_ae_lsh:
     # TEST SEARCH
     def search_sample(self, sample):
 
-        y_result = []
+        encode_result = []
         for i in range(len(sample)):
             x_ = [sample[i]]
 
@@ -193,11 +193,37 @@ class cnn_ae_lsh:
 
             clss = np.argsort(probability)[::-1]
             result = probability[clss]
-
             index = np.argwhere(result >= self.threshold).reshape(-1)
-            y_result.append([clss[index], result[index]])
 
-        return y_result
+            # Clases elejidas y % de representacion
+            clss = clss[index]
+            result = result[index]
+
+            # Insertamos la muestra original, la muestra original tiene como clase y probabilidad [-1,-1]
+            decode_list = [np.concatenate((x_[0], [-1, -1]), axis=0)]
+            for j in range(len(clss)):
+                # Pasamos la muestra original por los AE de las clases elegidas
+                cost_i, layer = self.sess.run([self.AEclass[j].cost, self.AEclass[j].y], feed_dict={self.x_batch: x_})
+                # La muestra reconstruida, se concatena con su numero de clase y su valor de probabilidad
+                decode = np.concatenate((layer[0], [clss[j], result[j]]), axis=0)
+                decode_list.append(decode)
+
+            # Con el AE global codificamos las muestras botenidas en el paso anterior
+            encode_list = []
+            for decode in decode_list:
+                x_ = [decode[:-2]]
+                label = decode[-2:]
+
+                layer = self.sess.run(self.AEGlobal.z, feed_dict={self.x_batch: x_})
+                encode = np.concatenate((layer[0], label), axis=0)
+                encode_list.append(encode)
+
+            encode_result.append(encode_list)
+            print("Chosen classes: ", clss, result)
+            print("Redimension   : ", np.shape(decode_list), '=>', np.shape(encode_list))
+            print("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
+
+        return encode_result
 
     # -----------------------------------------------------------------
     # Funciones secunadarias
@@ -237,3 +263,4 @@ class cnn_ae_lsh:
         self.var_dict[(name, idx)] = var
         assert var.get_shape() == initial_value.get_shape()
         return var
+

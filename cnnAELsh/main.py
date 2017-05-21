@@ -58,7 +58,7 @@ if __name__ == '__main__':
     c = tf.ConfigProto()
     c.gpu_options.visible_device_list = "1,2"
 
-    print('SEARCH SAMPLES')
+    print('CNN + AE + LSH')
     print('--------------')
 
     #data_train = Dataset_csv(path_data=path_data_train_all, minibatch=30, max_value=1, restrict=False, random=True)
@@ -72,23 +72,33 @@ if __name__ == '__main__':
                                    npy_ae_class_paths=path_w_ae_class,
                                    normal_max_path=path_normalization_max,
                                    num_class=num_class,
-                                   threshold=0.2)
+                                   threshold=0.0002)
 
             calsh.build(dim_input=dim_input, layers=layers)
 
+            #
+            # TESTEAR PARTES DE LA RED
+            # - - - - - - - - - - - -
             # Prueba la presicion de la CNN-VGG
             calsh.test_vgg(data, normalize=False)
             # Prueba el error de reconstruccion del Autoencoder
             calsh.test_ae_global(data, normalize=True)
             # Prueba de clasificacion con Autoencoders
             calsh.test_ae_class(data, normalize=True)
+
+            #
+            # GENERAR DATA CODIFICADA PARA INDEXACION LSH
+            # - - - - - - - - - - - - - - - - - - - - - -
             # Genera un CSV de la data codificada, de tamaño 512
             calsh.generate_data_encode(data, path_save=path, csv_name="encode_test_512", normalize=True)
 
+            #
+            # PROCESAMIENTO DE MUESTRAS
+            # - - - - - - - - - - - - -
             # Procesa la data ejemplo por ejemplo
             data.change_minibatch(1)
             for i in range(data.total_batchs_complete):
                 x, label = data.generate_batch()
-                res = calsh.search_sample(sample=x)
+                result = calsh.search_sample(sample=x)
                 data.next_batch_test()
-                print(res, label)
+

@@ -35,10 +35,11 @@ path_data_test_all = [path + 'output_testVGG_relu6.csv']
 
 # PESOS ENTRENADOS
 path_weight = '../weight/vgg_cifar10/'
-path_cnn_weight = '../weight/save_cifar10_3.npy'
-path_weight_ae = []
+path_w_cnn = path_weight + 'save_vgg.npy'
+path_w_ae_all = path_weight + 'save_ae_all.npy'
+path_w_ae_class = []
 for i in range(num_class):
-    path_weight_ae.append(path_weight + 'vggAE_class'+str(i)+'.npy')
+    path_w_ae_class.append(path_weight + 'save_ae_class'+str(i)+'.npy')
 
 assert os.path.exists(path), print('No existe el directorio de datos ' + path)
 assert os.path.exists(path_weight), print('No existe el directorio de pesos ' + path_weight)
@@ -63,7 +64,7 @@ if __name__ == '__main__':
 
     with tf.device('/cpu:0'):
         with tf.Session(config=c) as sess:
-            calsh = CAL.cnn_ae_lsh(session=sess, npy_convol_path=path_cnn_weight)
+            calsh = CAL.cnn_ae_lsh(session=sess, npy_convol_path=path_w_cnn)
             calsh.build(dim_input=dim_input, layers=layers)
 
             # for i in range(data.total_batchs_complete):

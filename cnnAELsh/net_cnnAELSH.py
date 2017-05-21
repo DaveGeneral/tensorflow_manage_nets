@@ -21,7 +21,7 @@ else:
 
 class cnn_ae_lsh:
 
-    def __init__(self, session, npy_convol_path=None, npy_weight_encoders_paths=None, trainable=False, num_class=0, threshold=0):
+    def __init__(self, session, npy_convol_path=None, npy_ae_paths=None, npy_ae_class_paths=None, trainable=False, num_class=0, threshold=0):
 
         if npy_convol_path is not None:
             self.data_dict = np.load(npy_convol_path, encoding='latin1').item()
@@ -33,7 +33,7 @@ class cnn_ae_lsh:
         self.var_dict = {}
         self.trainable = trainable
 
-        self.weight_paths = npy_weight_encoders_paths
+        self.weight_paths = npy_ae_paths
         self.num_class = num_class
         self.AEclass = []
         self.threshold = threshold
@@ -42,6 +42,7 @@ class cnn_ae_lsh:
     def build(self, dim_input, layers=None):
 
         self.x_batch = tf.placeholder(tf.float32, [None, dim_input])
+
         # RED VGG ONLY MLP
         self.fc7 = self.fc_layer(self.x_batch, 4096, 4096, "fc7")
         self.relu7 = tf.nn.relu(self.fc7)
@@ -66,9 +67,9 @@ class cnn_ae_lsh:
         return y_result
 
     # Layer FullConnected
-    def fc_layer(self, bottom, in_size, out_size, name, load_weight_force=False):
+    def fc_layer(self, bottom, in_size, out_size, name):
         with tf.variable_scope(name):
-            weights, biases = self.get_fc_var(in_size, out_size, name, load_weight_force)
+            weights, biases = self.get_fc_var(in_size, out_size, name)
 
             x = tf.reshape(bottom, [-1, in_size])
             fc = tf.nn.bias_add(tf.matmul(x, weights), biases)

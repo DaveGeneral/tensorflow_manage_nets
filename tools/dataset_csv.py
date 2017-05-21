@@ -39,6 +39,7 @@ class Dataset_csv:
 
         self.path_data = path_data
         self.minibatch = minibatch
+        self.restrict = restrict
 
         # leemos el archivo csv y guardamos las columnas 0 y 1
         df = []
@@ -69,7 +70,7 @@ class Dataset_csv:
         self.start = 0
         self.end = minibatch
 
-        if restrict is True:
+        if self.restrict is True:
             assert (self.total_inputs / self.minibatch).is_integer(), print('El minibatch debe ser multiplo del total de datos de entrada ', self.total_inputs)
 
         # Considera solo batch completos
@@ -91,6 +92,25 @@ class Dataset_csv:
 
         self.inputs = self.inputs / max
         print('Dataset normalizado.')
+
+    def change_minibatch(self, minibatch):
+        self.minibatch = minibatch
+        # inicializamos los punteros de la data
+        self.start = 0
+        self.end = minibatch
+
+        if self.restrict is True:
+            assert (self.total_inputs / self.minibatch).is_integer(), print('El minibatch debe ser multiplo del total de datos de entrada ', self.total_inputs)
+
+        # Considera solo batch completos
+        self.total_batchs = int(self.total_inputs / self.minibatch)
+
+        # Considera solo batch completos + 1 batch incompleto
+        total_b = self.total_inputs / self.minibatch
+        if (total_b - int(total_b)) > 0:
+            self.total_batchs_complete = int(total_b) + 1
+        else:
+            self.total_batchs_complete = int(total_b)
 
     #
     # Generamos el batch en la posicion actual donde se encuentras los punteros self.start y self.end

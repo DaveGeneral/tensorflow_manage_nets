@@ -68,7 +68,7 @@ class cnn_ae_lsh:
         self.relu7 = tf.nn.relu(self.fc7)
 
         self.fc8 = self.fc_layer(self.relu7, 4096, 10, "fc8")
-        self.prob = tf.nn.softmax(self.fc8, name="prob")
+        self.probVGG = tf.nn.softmax(self.fc8, name="prob")
 
         # ------------------
         # AUTOENCODER GLOBAL
@@ -102,7 +102,7 @@ class cnn_ae_lsh:
         print('\n# PHASE: Test classification')
         for i in range(objData.total_batchs_complete):
             batch, label = objData.generate_batch()
-            prob = self.sess.run(self.prob, feed_dict={self.x_batch: batch})
+            prob = self.sess.run(self.probVGG, feed_dict={self.x_batch: batch})
 
             label_total = np.concatenate((label_total, label), axis=0)
             prob_total = np.concatenate((prob_total, prob), axis=0)
@@ -160,14 +160,14 @@ class cnn_ae_lsh:
         y_result = []
         for i in range(len(sample)):
             x_ = [sample[i]]
-            cost_class = []
+            # cost_class = []
             for class_i in range(self.num_class):
-                cost_i = self.sess.run(self.AEclass[class_i].cost, feed_dict={self.x_batch: x_})
-                cost_class.append(cost_i)
+                probability = self.sess.run(self.probVGG, feed_dict={self.x_batch: x_})
+                # cost_class.append(cost_i)
 
-            cost_class = np.array(cost_class)
-            res = np.argsort(cost_class)
-            y_result.append([res, cost_class[res]])
+            probability = np.array(probability)
+            res = np.argsort(probability)
+            y_result.append([res, probability[res]])
 
         return y_result
 

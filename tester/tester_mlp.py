@@ -132,8 +132,8 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
 
         test_model(MLP, sess_test=sess, objData=data_test)
-        train_model(MLP, sess_train=sess, objData=data_train, epoch=epoch)
-        accuracy = test_model(MLP, sess_test=sess, objData=data_test)
-
-        # # SAVE WEIGHTs
-        MLP.save_npy(sess, path_save_weight)
+        # train_model(MLP, sess_train=sess, objData=data_train, epoch=epoch)
+        # accuracy = test_model(MLP, sess_test=sess, objData=data_test)
+        #
+        # # # SAVE WEIGHTs
+        # MLP.save_npy(sess, path_save_weight)

@@ -69,17 +69,23 @@ if __name__ == '__main__':
             calsh = CAL.cnn_ae_lsh(session=sess,
                                    npy_convol_path=path_w_cnn,
                                    npy_ae_path=path_w_ae_all,
+                                   npy_ae_class_paths=path_w_ae_class,
                                    normal_max_path=path_normalization_max,
                                    num_class=num_class)
 
             calsh.build(dim_input=dim_input, layers=layers)
-            calsh.test_vgg()
-            calsh.test_ae_global(data, normalizate=True)
-            calsh.generate_data_encode(data, path_save=path, csv_name="encode_test_256", normalizate=True)
 
-            # for i in range(data.total_batchs_complete):
-            #     x, label = data.generate_batch()
-            #
-            #     res = aencoder.search_sample(sample=x)
-            #     data.next_batch_test()
-            #     print(res, label)
+            # Prueba la presicion de la CNN-VGG
+            calsh.test_vgg(data, normalizate=False)
+            # Prueba el error de reconstruccion del Autoencoder
+            calsh.test_ae_global(data, normalizate=True)
+            # Genera un CSV de la data codificada, de tamaño 512
+            calsh.generate_data_encode(data, path_save=path, csv_name="encode_test_512", normalizate=True)
+
+            # Procesa la data ejemplo por ejemplo
+            data.change_minibatch(1)
+            for i in range(data.total_batchs_complete):
+                x, label = data.generate_batch()
+                res = calsh.search_sample(sample=x)
+                data.next_batch_test()
+                print(res, label)

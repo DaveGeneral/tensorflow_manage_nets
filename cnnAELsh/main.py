@@ -97,8 +97,21 @@ if __name__ == '__main__':
             # - - - - - - - - - - - - -
             # Procesa la data ejemplo por ejemplo
             data.change_minibatch(1)
+            error_total = 0
             for i in range(data.total_batchs_complete):
                 x, label = data.generate_batch()
+
                 result = calsh.search_sample(sample=x)
                 data.next_batch_test()
+
+                dato = result[0]
+                a = dato[0][:-2]
+                b = dato[1][:-2]
+                c = np.sum(np.sqrt(np.power(a - b, 2)))
+
+                print("DIstancia:", c)
+
+                error_total = error_total + c
+
+            print('Error total:', error_total / data.total_inputs)
 

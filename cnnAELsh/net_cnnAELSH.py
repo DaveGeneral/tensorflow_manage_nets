@@ -30,6 +30,7 @@ class cnn_ae_lsh:
                  normal_max_path = None,
                  trainable=False,
                  num_class=0,
+                 k_classes=1,
                  threshold=0):
 
         if npy_convol_path is not None:
@@ -53,6 +54,7 @@ class cnn_ae_lsh:
         self.AEclass = []
         self.sess = session
 
+        self.k = k_classes
         self.threshold = threshold
 
     def build(self, dim_input, layers=None):
@@ -171,6 +173,7 @@ class cnn_ae_lsh:
         total = objData.total_inputs
         cost_total = 0
 
+        print('\n# GENERATE DATA ENCODE')
         for i in range(objData.total_batchs_complete):
             x_, label = objData.generate_batch()
             cost, layer = self.sess.run([self.AEGlobal.cost, self.AEGlobal.net['encodeFC_1']], feed_dict={self.x_batch: x_})
@@ -191,6 +194,45 @@ class cnn_ae_lsh:
             probability = self.sess.run(self.probVGG, feed_dict={self.x_batch: x_})
             probability = np.array(probability[0])
 
+            # Clases elejidas y % de representacion
+            clss = np.argsort(probability)[::-1][:self.k]
+            result = probability[clss]
+
+            # Normalizamos la data para los Auto-encoders
+            assert np.shape(x_[0]) == np.shape(self.normalization_max), print('Different', np.shape(x_[0]),
+                                                                              np.shape(self.normalization_max))
+            x_ = x_ / self.normalization_max
+
+            # Ingresamos la muestra original al AE-GLOBAL, obtenemo un vector de 512 + clase y probabilidad [-1,-1]
+            encode_list = []
+            layer = self.sess.run(self.AEGlobal.z, feed_dict={self.x_batch: x_})
+            encode_list.append(np.concatenate((layer[0], [-1, -1]), axis=0))
+
+            # Obtenemos la codificacion de la muestra original a traves de la AE-By-CLASS, las k codificaciones de 512
+            for j in range(len(clss)):
+                # Pasamos la muestra original por los AE de las clases elegidas
+                layer = self.sess.run(self.AEclass[clss[j]].z, feed_dict={self.x_batch: x_})
+                # La muestra reconstruida, se concatena con su numero de clase y su valor de probabilidad
+                encode = np.concatenate((layer[0], [clss[j], result[j]]), axis=0)
+                encode_list.append(encode)
+
+            encode_result.append(encode_list)
+            print("Chosen classes: ", clss, result)
+            print("Redimension   : ", np.shape(encode_list))
+            # print("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
+
+        return encode_result
+
+    # TEST SEARCH 2
+    def search_sample_2(self, sample):
+
+        encode_result = []
+        for i in range(len(sample)):
+            x_ = [sample[i]]
+
+            probability = self.sess.run(self.probVGG, feed_dict={self.x_batch: x_})
+            probability = np.array(probability[0])
+
             clss = np.argsort(probability)[::-1]
             result = probability[clss]
             index = np.argwhere(result >= self.threshold).reshape(-1)
@@ -199,11 +241,15 @@ class cnn_ae_lsh:
             clss = clss[index]
             result = result[index]
 
+            # Normalizamos la data para los Auto-encoders
+            assert np.shape(x_[0]) == np.shape(self.normalization_max), print('Different', np.shape(x_[0]), np.shape(self.normalization_max))
+            x_ = x_/self.normalization_max
+
             # Insertamos la muestra original, la muestra original tiene como clase y probabilidad [-1,-1]
             decode_list = [np.concatenate((x_[0], [-1, -1]), axis=0)]
             for j in range(len(clss)):
                 # Pasamos la muestra original por los AE de las clases elegidas
-                cost_i, layer = self.sess.run([self.AEclass[j].cost, self.AEclass[j].y], feed_dict={self.x_batch: x_})
+                cost_i, layer = self.sess.run([self.AEclass[clss[j]].cost, self.AEclass[j].y], feed_dict={self.x_batch: x_})
                 # La muestra reconstruida, se concatena con su numero de clase y su valor de probabilidad
                 decode = np.concatenate((layer[0], [clss[j], result[j]]), axis=0)
                 decode_list.append(decode)

@@ -72,6 +72,7 @@ if __name__ == '__main__':
                                    npy_ae_class_paths=path_w_ae_class,
                                    normal_max_path=path_normalization_max,
                                    num_class=num_class,
+                                   k_classes=2,
                                    threshold=0.0002)
 
             calsh.build(dim_input=dim_input, layers=layers)
@@ -90,7 +91,7 @@ if __name__ == '__main__':
             # GENERAR DATA CODIFICADA PARA INDEXACION LSH
             # - - - - - - - - - - - - - - - - - - - - - -
             # Genera un CSV de la data codificada, de tamaño 512
-            calsh.generate_data_encode(data, path_save=path, csv_name="encode_test_512", normalize=True)
+            calsh.generate_data_encode(data, path_save=path, csv_name="encode_test_512x", normalize=True, csv_save=True)
 
             #
             # PROCESAMIENTO DE MUESTRAS

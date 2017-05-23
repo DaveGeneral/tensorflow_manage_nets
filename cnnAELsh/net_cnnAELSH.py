@@ -165,24 +165,54 @@ class cnn_ae_lsh:
         objData.change_minibatch(minibatch_aux)
         utils.metrics_multiclass(y_true, y_result)
 
+
     # GENERATE DATA ENCODE
-    def generate_data_encode(self, objData, path_save='', csv_name='encode', normalize=False):
+    def generate_data_encode_matrix(self, data, normalize=True):
+
+        if normalize is True:
+            data = data / self.normalization_max
+
+        total = len(data)
+        result = []
+
+        print('\n# GENERATE DATA ENCODE')
+        for i in range(total):
+            x_ = [data[i]]
+            layer = self.sess.run(self.AEGlobal.z, feed_dict={self.x_batch: x_})
+            result.append(layer[0])
+        return result
+
+    # GENERATE DATA ENCODE
+    def generate_data_encode(self, objData, normalize=False, csv_save=False, path_save='', csv_name='encode'):
         if normalize is True:
             objData.normalization(self.normalization_max)
 
         total = objData.total_inputs
         cost_total = 0
+        result = []
 
-        print('\n# GENERATE DATA ENCODE')
-        for i in range(objData.total_batchs_complete):
-            x_, label = objData.generate_batch()
-            cost, layer = self.sess.run([self.AEGlobal.cost, self.AEGlobal.net['encodeFC_1']], feed_dict={self.x_batch: x_})
-            utils.save_layer_output(layer, label, name=csv_name, dir=path_save)
+        if csv_save is True:
+            print('\n# GENERATE DATA ENCODE')
+            for i in range(objData.total_batchs_complete):
+                x_, label = objData.generate_batch()
+                cost, layer = self.sess.run([self.AEGlobal.cost, self.AEGlobal.net['encodeFC_1']], feed_dict={self.x_batch: x_})
+                utils.save_layer_output(layer, label, name=csv_name, dir=path_save)
 
-            cost_total = cost_total + cost
-            objData.next_batch_test()
+                cost_total = cost_total + cost
+                objData.next_batch_test()
 
-        print(cost_total, cost_total / total)
+            print(cost_total, cost_total / total)
+
+        else:
+            print('\n# GENERATE DATA ENCODE')
+            for i in range(objData.total_batchs_complete):
+                x_, label = objData.generate_batch()
+                layer = self.sess.run(self.AEGlobal.z, feed_dict={self.x_batch: x_})
+                objData.next_batch_test()
+                result.append(np.concatenate((layer[0], [label]), axis=0))
+
+            return result
+
 
     # TEST SEARCH
     def search_sample(self, sample):

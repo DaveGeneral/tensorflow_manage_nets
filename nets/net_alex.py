@@ -23,7 +23,7 @@ class VGG19:
         self.dropout = dropout
         self.load_weight_fc = load_weight_fc
 
-    def build(self, rgb, target, train_mode=True, last_layers=[128, 10]):
+    def build(self, rgb, target, train_mode=True, last_layers=[128, 10], softmax=True):
         """
         load variable from npy to build the vgg
 
@@ -91,7 +91,11 @@ class VGG19:
             self.relu7 = tf.cond(train_mode, lambda: tf.nn.dropout(self.relu7, self.dropout), lambda: self.relu7)
 
         self.fc8 = self.fc_layer(self.relu7, last_layers[0], last_layers[1], "fc8")
-        self.prob = tf.nn.softmax(self.fc8, name="prob")
+
+        if softmax is True:
+            self.prob = tf.nn.softmax(self.fc8, name="prob")
+        else:
+            self.prob = tf.nn.sigmoid(self.fc8, name="prob")
 
         # COST - TRAINING
         self.cost = tf.reduce_mean((self.prob - target) ** 2)

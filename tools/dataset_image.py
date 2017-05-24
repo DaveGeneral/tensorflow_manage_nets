@@ -41,7 +41,7 @@ class Dataset:
         random: Si es true automaticamente de reordenara al definir el objeto 'Dataset'
     """
 
-    def __init__(self, path_data='', path_dir_images='', minibatch=25, cols=[], restrict=False, random=True, xtype=".jpg"):
+    def __init__(self, path_data='', path_dir_images='', minibatch=25, cols=[], multilabel=False, restrict=False, random=True, xtype=".jpg"):
 
         assert os.path.exists(path_data), 'No existe el archivo con los datos de entrada ' + path_data
 
@@ -54,7 +54,12 @@ class Dataset:
         # leemos el archivo csv y guardamos las columnas 0 y 2 (nombre de imagen y etiqueta respectivamente)
         data = pd.read_csv(path_data, header=None)
         self.images = data[cols[0]]
-        self.labels = data[cols[1]]
+
+        if multilabel is False:
+            self.labels = data[cols[1]]
+        else:
+            self.labels = data[cols[1][0]: cols[1][1]]
+
         self.total_images = len(data[cols[0]])
 
         # inicializamos los punteros de la data

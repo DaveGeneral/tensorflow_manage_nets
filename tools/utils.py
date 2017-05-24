@@ -7,7 +7,7 @@ import sys, os, csv
 import itertools
 import matplotlib.pyplot as plt
 from pathlib import Path
-from sklearn.metrics import confusion_matrix, average_precision_score, roc_curve, roc_auc_score
+from sklearn.metrics import confusion_matrix, average_precision_score, roc_curve, roc_auc_score, hamming_loss
 from sklearn.metrics import precision_recall_curve, f1_score, accuracy_score
 from sklearn.preprocessing import label_binarize
 from itertools import cycle
@@ -372,6 +372,51 @@ def precision_recall(y_true, y_prob, num_class):
     plt.title('Extension of Precision-Recall curve to multi-class')
     plt.legend(loc="lower right")
     plt.show()
+
+
+def hamming_score(y_true, y_pred):
+    '''
+    Compute the Hamming score (a.k.a. label-based accuracy) for the multi-label case
+    http://stackoverflow.com/q/32239577/395857
+    '''
+
+    acc_list = []
+    for i in range(y_true.shape[0]):
+        set_true = set(np.where(y_true[i])[0])
+        set_pred = set(np.where(y_pred[i])[0])
+
+        tmp_a = None
+        if len(set_true) == 0 and len(set_pred) == 0:
+            tmp_a = 1
+        else:
+            tmp_a = len(set_true.intersection(set_pred))/float(len(set_true.union(set_pred)))
+        acc_list.append(tmp_a)
+    return np.mean(acc_list)
+
+
+def metrics_multiLabel(y_true, y_pred):
+    hs = hamming_score(y_true, y_pred)
+    accs = accuracy_score(y_true, y_pred, normalize=True, sample_weight=None)
+    hl = hamming_loss(y_true, y_pred)
+
+    print('Hamming score: {0}'.format(hs))
+    print('Subset accuracy: {0}'.format(accs))
+    print('Hamming loss: {0}'.format(hl))
+    return hs
+
+
+def print_accuracy_multilabel(target, prob):
+
+    total = len(target)
+    y_pred = []
+
+    for i in range(total):
+        new_prob = np.round(prob[i]).astype(int)
+        y_pred.append(new_prob)
+
+    accuracy = hamming_score(target, y_pred)
+    print('    results[ Total:'+str(total)+' | Accuracy:'+str(accuracy)+' ]')
+    return y_pred
 
 
 def generate_max_csvData(sources, path_save, has_label=True, no_NaN=True):

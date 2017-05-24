@@ -23,11 +23,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 if switch_server is True:
     from tools import utils
     from nets import net_alex as vgg19
-    from tools.dataset_image import Dataset
+    from tools.dataset_image_mlabel import Dataset
 else:
     from tensorflow_manage_nets.tools import utils
     from tensorflow_manage_nets.nets import net_alex as vgg19
-    from tensorflow_manage_nets.tools.dataset_image import Dataset
+    from tensorflow_manage_nets.tools.dataset_image_mlabel import Dataset
 
 # ..................................................................
 # path = '../../data/ISB2016/'
@@ -56,13 +56,11 @@ assert os.path.exists(path_data_test), 'No existe el archivo con los datos de pr
 
 # Función, fase de test
 def test_model(net, sess_test, objData):
-
     total = objData.total_images
     prob_predicted = np.random.random((0, net.num_class))
 
     print('\n# PHASE: Test classification')
     for i in range(objData.total_batchs_complete):
-
         batch, label = objData.generate_batch()
         prob, layer = sess_test.run([net.prob, net.fc7], feed_dict={vgg_batch: batch, train_mode: False})
 
@@ -78,7 +76,7 @@ def test_model(net, sess_test, objData):
 
     # promediamos la presicion total
     print('\n# STATUS:')
-    y_true = objData.labels
+    y_true = objData.labels.as_matrix()
     y_prob = prob_predicted
 
     hamming_score = utils.metrics_multiLabel(y_true, y_prob)
@@ -87,7 +85,6 @@ def test_model(net, sess_test, objData):
 
 # Funcion, fase de entrenamiento
 def train_model(net, sess_train, objData, epoch):
-
     print('\n# PHASE: Training model')
     for ep in range(epoch):
         print('\n     Epoch:', ep)
@@ -98,11 +95,12 @@ def train_model(net, sess_train, objData, epoch):
             batch, label = objData.generate_batch()
 
             # Generate the 'one hot' or labels
-            #label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=net.num_class)
-            #label = list(sess_train.run(label))
-
+            # label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=net.num_class)
+            # label = list(sess_train.run(label))
+            print(np.shape(batch), np.shape(label))
             # Run training
-            _, cost = sess_train.run([net.train, net.cost], feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
+            _, cost = sess_train.run([net.train, net.cost],
+                                     feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
             # Next slice batch
             objData.next_batch()
             t_end = time.time()
@@ -116,7 +114,6 @@ def train_model(net, sess_train, objData, epoch):
 
 
 if __name__ == '__main__':
-
     # LOad y save  weights
     path_load_weight = '../weight/vgg19.npy'
     path_save_weight = '../weight/save_flikr_1.npy'
@@ -132,12 +129,13 @@ if __name__ == '__main__':
     accuracy = 0
 
     # GENERATE DATA
-    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, [1,24]], multilabel=True, xtype='.jpg')
-    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, [1,24]], multilabel=True, random=False, xtype='.jpg')
-    #data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, [1,24]], multilabel=True, random=False, xtype='.jpg')
+    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train,
+                         cols=[0, [1, 24]], xtype='.jpg')
+    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test,
+                        cols=[0, [1, 24]], random=False, xtype='.jpg')
+    # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, [1,24]], multilabel=True, random=False, xtype='.jpg')
 
     with tf.Session() as sess:
-
         # DEFINE MODEL
         vgg_batch = tf.placeholder(tf.float32, [None, 224, 224, 3])
         vgg_label = tf.placeholder(tf.float32, [None, last_layers[1]])
@@ -164,6 +162,7 @@ if __name__ == '__main__':
 
         # SAVE WEIGHTs
         vgg.save_npy(sess, path_save_weight)
+
 
 
 

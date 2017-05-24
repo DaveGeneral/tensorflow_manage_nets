@@ -54,7 +54,7 @@ class Dataset:
         # leemos el archivo csv y guardamos las columnas 0 y 2 (nombre de imagen y etiqueta respectivamente)
         data = pd.read_csv(path_data, header=None)
         self.images = data[cols[0]]
-        self.labels = data[cols[1]]
+        self.labels = data.iloc[:, cols[1][0]: cols[1][1]+1]
         self.total_images = len(data[cols[0]])
 
         # inicializamos los punteros de la data
@@ -90,10 +90,10 @@ class Dataset:
 
         # cargamos las imagenes y estas son tratadas para darles el tamaño requerido
         for i in range(start, end):
-            # print(self.images[i], i)
-            img = utils.load_image(self.dir_images + self.images[i] + self.type)[:, :, :3]
+            lab = self.labels.iloc[i, :].values
+            img = utils.load_image(self.dir_images + str(self.images[i]) + self.type)[:, :, :3]
             batch_list.append(img.reshape((1, 224, 224, 3)))
-            label_list.append(self.labels[i])
+            label_list.append(lab)
 
         # concatena cada elemento del batch_list dando como resultado una matriz con la forma (n, 224, 224, 3)
         # retorna el batch_list concatenado y el label_list con n items, una etiqueta para cada imagen
@@ -154,4 +154,5 @@ class Dataset:
         df = df.reindex(np.random.permutation(df.index))
         df = pd.DataFrame(df).reset_index(drop=True)
         self.images = df[cols[0]]
-        self.labels = df[cols[1]]
+        self.labels = df.iloc[:, cols[1][0]: cols[1][1] + 1]
+

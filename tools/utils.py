@@ -381,7 +381,7 @@ def hamming_score(y_true, y_pred):
     '''
 
     acc_list = []
-    for i in range(y_true.shape[0]):
+    for i in range(np.shape(y_true)[0]):
         set_true = set(np.where(y_true[i])[0])
         set_pred = set(np.where(y_pred[i])[0])
 

@@ -97,10 +97,8 @@ def train_model(net, sess_train, objData, epoch):
             # Generate the 'one hot' or labels
             # label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=net.num_class)
             # label = list(sess_train.run(label))
-            print(np.shape(batch), np.shape(label))
             # Run training
-            _, cost = sess_train.run([net.train, net.cost],
-                                     feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
+            _, cost = sess_train.run([net.train, net.cost], feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
             # Next slice batch
             objData.next_batch()
             t_end = time.time()

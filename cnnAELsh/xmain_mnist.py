@@ -13,11 +13,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 
 if switch_server is True:
     from tools import utils
-    from cnnAELsh import net_cnnAELSH as CAL
+    from cnnAELsh import net_cnnAELSH_mnist as CAL
     from tools.dataset_csv import Dataset_csv
 else:
     from tensorflow_manage_nets.tools import utils
-    from tensorflow_manage_nets.cnnAELsh import net_cnnAELSH as CAL
+    from tensorflow_manage_nets.cnnAELsh import net_cnnAELSH_mnist as CAL
     from tensorflow_manage_nets.tools.dataset_csv import Dataset_csv
 
 # ..................................................................
@@ -36,7 +36,7 @@ path_normalization_max = path + 'maximo_mnist800.csv'
 
 # PESOS ENTRENADOS
 path_weight = '../weight/mnist/'
-path_w_cnn = path_weight + 'save_vgg.npy'
+path_w_cnn = path_weight + 'mynet.npy'
 path_w_ae_all = path_weight + 'save_ae_all.npy'
 path_w_ae_class = []
 for i in range(num_class):

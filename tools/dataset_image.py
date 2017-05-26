@@ -91,7 +91,7 @@ class Dataset:
         # cargamos las imagenes y estas son tratadas para darles el tamaño requerido
         for i in range(start, end):
             # print(self.images[i], i)
-            img = utils.load_image(self.dir_images + self.images[i] + self.type)[:, :, :3]
+            img = utils.load_image(self.dir_images + str(self.images[i]) + self.type)[:, :, :3]
             batch_list.append(img.reshape((1, 224, 224, 3)))
             label_list.append(self.labels[i])
 

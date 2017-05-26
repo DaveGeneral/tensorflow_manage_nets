@@ -2,6 +2,7 @@ import time
 import tensorflow as tf
 import sys, os
 import numpy as np
+import tensorflow.examples.tutorials.mnist.input_data as input_data
 
 switch_server = True
 
@@ -26,41 +27,38 @@ else:
 # path_dir_image_test = path + "image_test_complete/"
 # path_data_train = path + 'ISB_Train_complete.csv'
 # path_data_test = path + 'ISB_Test_complete.csv'
-
-path = '../../data/CIFAR_10/'
-path_dir_image_train = path + "train_cifar10_original/"
-path_dir_image_test = path + "test_cifar10_original/"
-path_data_train = path + 'cifar10_train_label.csv'
-path_data_test = path + 'cifar10_test_label.csv'
+#
+# path = '../../data/CIFAR_10/'
+# path_dir_image_train = path + "train_cifar10_original/"
+# path_dir_image_test = path + "test_cifar10_original/"
+# path_data_train = path + 'cifar10_train_label.csv'
+# path_data_test = path + 'cifar10_test_label.csv'
 
 # VALIDATE INPUT DATA
-assert os.path.exists(path), 'No existe el directorio de datos ' + path
-assert os.path.exists(path_data_train), 'No existe el archivo con los datos de entrenamiento ' + path_data_train
-assert os.path.exists(path_data_test), 'No existe el archivo con los datos de pruebas ' + path_data_test
+# assert os.path.exists(path), 'No existe el directorio de datos ' + path
+# assert os.path.exists(path_data_train), 'No existe el archivo con los datos de entrenamiento ' + path_data_train
+# assert os.path.exists(path_data_test), 'No existe el archivo con los datos de pruebas ' + path_data_test
 
 
 # Función, fase de test
-def test_model(net, sess_test, objData):
+def test_model(net, sess_test, objData, minibatch=50):
 
-    total = objData.total_images
+    total = objData.num_examples
+
     count_success = 0
     count_by_class = np.zeros([net.num_class, net.num_class])
     prob_predicted = []
 
     print('\n# PHASE: Test classification')
-    for i in range(objData.total_batchs_complete):
 
-        batch, label = objData.generate_batch()
-        prob, layer = sess_test.run([net.prob, net.pool2], feed_dict={vgg_batch: batch, train_mode: False})
+    for batch_i in range(total // minibatch):
+        batch, label = objData.next_batch(minibatch)
+        batch = np.reshape(batch, (-1, 28, 28, 1))
 
-        # save output of a layer
-        # utils.save_layer_output(layer, label, name='layer_128', dir='../data/features/')
-        # utils.save_layer_output_by_class(layer, label, name='layer_128', dir='../data/features/')
+        prob, layer = sess_test.run([net.prob, net.pool2], feed_dict={vgg_batch: batch})
 
-        # Acumulamos los aciertos de cada iteracion, para despues hacer un promedio
         count, count_by_class, prob_predicted = utils.print_accuracy(label, prob, matrix_confusion=count_by_class, predicted=prob_predicted)
         count_success = count_success + count
-        objData.next_batch_test()
 
     # promediamos la precision total
     accuracy_final = count_success/total
@@ -73,28 +71,28 @@ def test_model(net, sess_test, objData):
 
 
 # Funcion, fase de entrenamiento
-def train_model(net, sess_train, objData, epoch):
+def train_model(net, sess_train, objData, epoch, minibatch):
 
+    total = objData.num_examples
     print('\n# PHASE: Training model')
+
     for ep in range(epoch):
         print('\n     Epoch:', ep)
         t0 = time.time()
         cost_i = 0
-        for i in range(objData.total_batchs):
-            batch, label = objData.generate_batch()
+        for batch_i in range(total // minibatch):
+            t_start = time.time()
+            batch, label = objData.next_batch(minibatch)
+            batch = np.reshape(batch, (-1, 28, 28, 1))
 
-            # Generate the 'one hot' or labels
             label = tf.one_hot([li for li in label], on_value=1, off_value=0, depth=net.num_class)
             label = list(sess_train.run(label))
-            # Run training
-            t_start = time.time()
-            _, cost = sess_train.run([net.train, net.cost], feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
+
+            _, cost = sess_train.run([net.train, net.cost], feed_dict={vgg_batch: batch, vgg_label: label})
             t_end = time.time()
-            # Next slice batch
-            objData.next_batch()
 
             cost_i = cost_i + cost
-            print("        > Minibatch: %d train on batch time: %7.3f seg." % (i, (t_end - t_start)))
+            print("        > Minibatch: %d train on batch time: %7.3f seg." % (batch_i, (t_end - t_start)))
 
         t1 = time.time()
         print("        Cost per epoch: ", cost_i)
@@ -105,23 +103,22 @@ def train_model(net, sess_train, objData, epoch):
 if __name__ == '__main__':
 
     # LOad y save  weights
-    path_load_weight = '../weight/alexnet.npy'
-    path_save_weight = '../weight/save_alexnet.npy'
+    path_load_weight = None
+    path_save_weight = '../weight/save_alex.npy'
     load_weight_fc = False
 
     # Ultimas capas de la red
     num_class = 10
     last_layers = [100, num_class]
     epoch = 2
-    mini_batch_train = 25
-    mini_batch_test = 30
+    mini_batch_train = 50
     learning_rate = 0.0005
     accuracy = 0
 
     # GENERATE DATA
-    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], restrict=False, xtype='.png')
-    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, 1], random=False, xtype='.png')
-    # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], random=False, xtype='.png')
+    mnist = input_data.read_data_sets('../data/MNIST_data/', one_hot=False)
+    data_test = mnist.test
+    data_train = mnist.train
 
     with tf.Session() as sess:
         # DEFINE MODEL
@@ -136,7 +133,7 @@ if __name__ == '__main__':
 
         # # Execute Network
         test_model(net=cnn, sess_test=sess, objData=data_test)
-        train_model(net=cnn, sess_train=sess, objData=data_train, epoch=epoch)
+        train_model(net=cnn, sess_train=sess, objData=data_train, epoch=epoch, minibatch=mini_batch_train)
         accuracy = test_model(net=cnn, sess_test=sess, objData=data_test)
 
         # SAVE LOG: Genera un registro en el archivo log-server.txt
@@ -149,4 +146,4 @@ if __name__ == '__main__':
                         extra='')
 
         # SAVE WEIGHTs
-        vgg.save_npy(sess, path_save_weight)
+        cnn.save_npy(sess, path_save_weight)

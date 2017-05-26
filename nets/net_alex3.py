@@ -17,7 +17,6 @@ class ALEXNET:
             self.data_dict = None
             print("random weight")
 
-        print(self.data_dict['fc7'])
         self.var_dict = {}
         self.trainable = trainable
         self.learning_rate = learning_rate

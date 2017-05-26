@@ -35,7 +35,7 @@ class cnn_ae_lsh:
 
         if npy_convol_path is not None:
             self.data_dict = np.load(npy_convol_path, encoding='latin1').item()
-            print("npy file loaded")
+            print("npy file loaded", npy_convol_path)
         else:
             self.data_dict = None
             print("random weight")
@@ -70,7 +70,7 @@ class cnn_ae_lsh:
         self.relu7 = tf.nn.relu(self.fc7)
 
         self.fc8 = self.fc_layer(self.relu7, 500, 10, "ip2")
-        self.prob = tf.nn.softmax(self.fc8, name="prob")
+        self.probVGG = tf.nn.softmax(self.fc8, name="prob")
 
 
         # ------------------

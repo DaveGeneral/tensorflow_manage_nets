@@ -66,12 +66,12 @@ class cnn_ae_lsh:
         # ----------------
         # NET VGG ONLY MLP
 
-        self.fc7 = self.fc_layer(self.x_batch, 800, 500, "ip1")  # 9216 = 256 * 6 * 6
-        self.relu7 = tf.nn.relu(self.fc7)
-
-        self.fc8 = self.fc_layer(self.relu7, 500, 10, "ip2")
-        self.probVGG = tf.nn.softmax(self.fc8, name="prob")
-
+        self.fc1 = self.fc_layer(self.pool2, 800, 500, "ip1")
+        self.relu1 = tf.nn.relu(self.fc1)
+        self.fc2 = self.fc_layer(self.relu1, 500, 100, "latent")
+        self.relu2 = tf.nn.relu(self.fc2)
+        self.fc3 = self.fc_layer(self.relu2, 100, 10, "ip2")
+        self.probVGG = tf.nn.softmax(self.fc3, name="prob")
 
         # ------------------
         # AUTOENCODER GLOBAL

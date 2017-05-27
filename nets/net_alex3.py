@@ -43,8 +43,8 @@ class ALEXNET:
 
         # COST - TRAINING
         self.cost = tf.reduce_mean((self.prob - target) ** 2)
-        # self.train = tf.train.AdamOptimizer(self.learning_rate).minimize(self.cost)
-        self.train = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.cost)
+        self.train = tf.train.AdamOptimizer(self.learning_rate).minimize(self.cost)
+        #self.train = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.cost)
 
         self.data_dict = None
         print(("build model finished: %ds" % (time.time() - start_time)))
@@ -166,3 +166,4 @@ class ALEXNET:
         np.save(npy_path, data_dict)
         print("File saved", npy_path)
         return npy_path
+

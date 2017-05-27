@@ -42,7 +42,6 @@ else:
 
 # Función, fase de test
 def test_model(net, sess_test, objData, minibatch=50):
-
     total = objData.num_examples
 
     count_success = 0
@@ -58,15 +57,15 @@ def test_model(net, sess_test, objData, minibatch=50):
         prob, layer = sess_test.run([net.prob, net.pool2], feed_dict={vgg_batch: batch})
 
         # save output of a layer
-        # utils.save_layer_output(layer, label, name='layer_128', dir='../data/features/')
-        # utils.save_layer_output_by_class(layer, label, name='layer_128', dir='../data/features/')
+        utils.save_layer_output(layer, label, name='train-mnist-800', dir='../data/MNIST_dataA/train800/')
+        utils.save_layer_output_by_class(layer, label, name='train-mnist-800', dir='../data/MNIST_dataA/train800/')
 
-
-        count, count_by_class, prob_predicted = utils.print_accuracy(label, prob, matrix_confusion=count_by_class, predicted=prob_predicted)
+        count, count_by_class, prob_predicted = utils.print_accuracy(label, prob, matrix_confusion=count_by_class,
+                                                                     predicted=prob_predicted)
         count_success = count_success + count
 
     # promediamos la precision total
-    accuracy_final = count_success/total
+    accuracy_final = count_success / total
     print('\n# STATUS: Confusion Matrix')
     print(count_by_class)
     print('    Success total: ', str(count_success))
@@ -77,7 +76,6 @@ def test_model(net, sess_test, objData, minibatch=50):
 
 # Funcion, fase de entrenamiento
 def train_model(net, sess_train, objData, epoch, minibatch):
-
     total = objData.num_examples
     print('\n# PHASE: Training model')
 
@@ -106,18 +104,17 @@ def train_model(net, sess_train, objData, epoch, minibatch):
 
 
 if __name__ == '__main__':
-
     # LOad y save  weights
-    path_load_weight = None
-    path_save_weight = '../weight/save_alex.npy'
-    load_weight_fc = False
+    path_load_weight = '../../mnist_cnn_v2/weight/save_alex2.npy'
+    path_save_weight = '../../mnist_cnn_v2/weight/save_alex2.npy'
+    load_weight_fc = True
 
     # Ultimas capas de la red
     num_class = 10
     last_layers = [100, num_class]
-    epoch = 2
+    epoch = 5
     mini_batch_train = 50
-    learning_rate = 0.0005
+    learning_rate = 0.00009
     accuracy = 0
 
     # GENERATE DATA
@@ -125,7 +122,10 @@ if __name__ == '__main__':
     data_test = mnist.test
     data_train = mnist.train
 
-    with tf.Session() as sess:
+    c = tf.ConfigProto()
+    c.gpu_options.visible_device_list = "2"
+
+    with tf.Session(config=c) as sess:
         # DEFINE MODEL
         vgg_batch = tf.placeholder(tf.float32, [None, 28, 28, 1])
         vgg_label = tf.placeholder(tf.float32, [None, last_layers[1]])
@@ -137,18 +137,4 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
 
         # # Execute Network
-        test_model(net=cnn, sess_test=sess, objData=data_test)
-        train_model(net=cnn, sess_train=sess, objData=data_train, epoch=epoch, minibatch=mini_batch_train)
-        accuracy = test_model(net=cnn, sess_test=sess, objData=data_test)
-
-        # SAVE LOG: Genera un registro en el archivo log-server.txt
-        utils.write_log(total_data=len(data_train.images),
-                        epoch=epoch,
-                        m_batch=mini_batch_train,
-                        l_rate=learning_rate,
-                        accuracy=accuracy,
-                        file_npy=path_load_weight,
-                        extra='')
-
-        # SAVE WEIGHTs
-        cnn.save_npy(sess, path_save_weight)
+        test_model(net=cnn, sess_test=sess, objData=data_train)

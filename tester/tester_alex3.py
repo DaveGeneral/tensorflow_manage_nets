@@ -57,6 +57,11 @@ def test_model(net, sess_test, objData, minibatch=50):
 
         prob, layer = sess_test.run([net.prob, net.pool2], feed_dict={vgg_batch: batch})
 
+        # save output of a layer
+        # utils.save_layer_output(layer, label, name='layer_128', dir='../data/features/')
+        # utils.save_layer_output_by_class(layer, label, name='layer_128', dir='../data/features/')
+
+
         count, count_by_class, prob_predicted = utils.print_accuracy(label, prob, matrix_confusion=count_by_class, predicted=prob_predicted)
         count_success = count_success + count
 
@@ -137,7 +142,7 @@ if __name__ == '__main__':
         accuracy = test_model(net=cnn, sess_test=sess, objData=data_test)
 
         # SAVE LOG: Genera un registro en el archivo log-server.txt
-        utils.write_log(total_data=data_train.total_images,
+        utils.write_log(total_data=len(data_train.images),
                         epoch=epoch,
                         m_batch=mini_batch_train,
                         l_rate=learning_rate,

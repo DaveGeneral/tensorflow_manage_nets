@@ -23,20 +23,20 @@ else:
 # ..................................................................
 # GLOBAL VARIABLES
 dim_input = 800
-layers = [[400,'relu'], [100,'relu']]
+layers = [[400,'relu'], [128,'relu']]
 num_class = 10
 
 # ..................................................................
 
 # DATA REDUCIDA
-path = '../data/MNIST_data/'
+path = '../data/MNIST_dataA/'
 path_data_train_all = [path + 'train800/output_train-mnist-800.csv']
 path_data_test_all = [path + 'test800/output_test-mnist-800.csv']
 path_normalization_max = path + 'maximo_mnist800.csv'
 
 # PESOS ENTRENADOS
 path_weight = '../weight/mnist/'
-path_w_cnn = path_weight + 'mynet.npy'
+path_w_cnn = path_weight + 'save_cnn.npy'
 path_w_ae_all = path_weight + 'save_ae_all.npy'
 path_w_ae_class = []
 for i in range(num_class):
@@ -51,6 +51,9 @@ if __name__ == '__main__':
     print('CNN + AE + LSH')
     print('--------------')
 
+    # data_train = Dataset_csv(path_data=path_data_train_all, minibatch=30, max_value=1, restrict=False, random=True)
+    data = Dataset_csv(path_data=path_data_test_all, minibatch=30, max_value=1, restrict=False, random=False)
+
     with tf.device('/cpu:0'):
         with tf.Session() as sess:
             calsh = CAL.cnn_ae_lsh(session=sess,
@@ -63,10 +66,20 @@ if __name__ == '__main__':
 
             calsh.build(dim_input=dim_input, layers=layers)
 
+            #
+            # TESTEAR PARTES DE LA RED
+            # - - - - - - - - - - - -
+            # Prueba la presicion de la CNN-VGG
+            calsh.test_vgg(data, normalize=False)
+            # Prueba el error de reconstruccion del Autoencoder
+            calsh.test_ae_global(data, normalize=True)
+            # Prueba de clasificacion con Autoencoders
+            calsh.test_ae_class(data, normalize=True)
+
             # Procces CNN+AE-Global-Class
             # Dim x = (1, 800) | return Dim (1, k_classes+1, 512+label+%=514)
             x = []
-            result = calsh.search_sample_2(sample=x)
+            result = calsh.search_sample(sample=x)
 
             data = [[],[],[]]
             calsh.generate_data_encode_matrix(data=data, normalize=True)

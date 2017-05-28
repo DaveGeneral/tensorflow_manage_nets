@@ -26,7 +26,7 @@ import os
 import numpy as np
 import pandas as pd
 from tools import utils
-from tensorflow_manage_nets.tools import utils
+#from tensorflow_manage_nets.tools import utils
 
 # ----------------------- #
 # MANAGE DATASET FROM NPY #

@@ -4,12 +4,13 @@ import numpy as np
 import time
 import inspect
 
-VGG_MEAN = [103.939, 116.779, 123.68]
+#VGG_MEAN = [103.939, 116.779, 123.68] original
+VGG_MEAN = [111.61/255, 113.16/255, 120.57/255]
 
 
 class ALEXNET:
 
-    def __init__(self, npy_path=None, trainable=True, learning_rate=0.05, dropout=0.5, load_weight_fc=False):
+    def __init__(self, npy_path=None, trainable=True, learning_rate=0.05, dropout=0.5, load_weight_fc=False, dim_image=224):
         if npy_path is not None:
             self.data_dict = np.load(npy_path, encoding='latin1').item()
             print("npy file loaded")
@@ -22,6 +23,7 @@ class ALEXNET:
         self.learning_rate = learning_rate
         self.dropout = dropout
         self.load_weight_fc = load_weight_fc
+        self.dim_image = dim_image
 
     def build(self, input_batch, target, last_layers=[768, 100]):
 
@@ -29,21 +31,40 @@ class ALEXNET:
 
         start_time = time.time()
         print("build model started")
-        self.conv1 = self.conv_layer(input_batch, 3, 64, 4, 1, 1, padding='VALID', relu=False, name="conv1")
-        self.conv1a = self.conv_layer(self.conv1, 64, 42, 1, 1, 1, relu=False, name="cccp1a")
-        self.conv1b = self.conv_layer(self.conv1a, 42, 32, 1, 1, 1, relu=False, name="cccp1b")
-        self.pool1 = self.max_pool(self.conv1b, 3, 3, 2, 2, name='pool1')
+        rgb_scaled = input_batch * 255.0
 
-        self.conv2 = self.conv_layer(self.pool1, 32, 42, 4, 1, 1, padding='VALID', relu=False, name="conv2")
-        self.pool2 = self.max_pool(self.conv2, 3, 3, 2, 2, padding='VALID', name='pool2')
+        # Convert RGB to BGR
+        red, green, blue = tf.split(axis=3, num_or_size_splits=3, value=rgb_scaled)
+        assert red.get_shape().as_list()[1:] == [self.dim_image, self.dim_image, 1]
+        assert green.get_shape().as_list()[1:] == [self.dim_image, self.dim_image, 1]
+        assert blue.get_shape().as_list()[1:] == [self.dim_image, self.dim_image, 1]
+        # bgr = tf.concat(axis=3, values=[
+        #     blue - VGG_MEAN[0],
+        #     green - VGG_MEAN[1],
+        #     red - VGG_MEAN[2],
+        # ])
 
-        self.conv3 = self.conv_layer(self.pool2, 42, 64, 2, 1, 1, padding='VALID', relu=False, name="conv3")
-        self.pool3 = self.avg_pool(self.conv3, 2, 2, 2, 2, name='pool3')
+        bgr = tf.concat(axis=3, values=[
+            red - VGG_MEAN[2],
+            green - VGG_MEAN[1],
+            blue - VGG_MEAN[0],
+        ])
+        assert bgr.get_shape().as_list()[1:] == [self.dim_image, self.dim_image, 3]
 
-        self.fc1 = self.fc_layer(self.pool3, 800, last_layers[0], "ip1", load_weight_force=True)
-        self.fc2 = self.fc_layer(self.fc1, last_layers[0], last_layers[1], "ip_f", load_weight_force=True)
+        self.conv1 = self.conv_layer(bgr, 3, 32, 5, 1, 1, relu=False, name="conv1")
+        self.pool1 = self.max_pool(self.conv1, 3, 3, 2, 2, name='pool1')
+        self.relu1 = tf.nn.relu(self.pool1)
+        self.lrn1 = tf.nn.lrn(self.relu1, depth_radius=1, alpha=1.66666662456e-05, beta=0.75, bias=1.0, name='norm1')
 
-        self.prob = tf.nn.softmax(self.fc2, name="prob")
+        self.conv2 = self.conv_layer(self.lrn1, 32, 32, 5, 1, 1, name="conv2")
+        self.pool2 = self.avg_pool(self.conv2, 3, 3, 2, 2, name='pool2')
+        self.lrn2 = tf.nn.lrn(self.relu1, depth_radius=1, alpha=1.66666662456e-05, beta=0.75, bias=1.0, name='norm2')
+
+        self.conv3 = self.conv_layer(self.lrn2, 32, 64, 5, 1, 1, name="conv3")
+        self.pool3 = self.avg_pool(self.conv3, 3, 3, 2, 2, name='pool3')
+
+        self.fc1 = self.fc_layer(self.pool3, last_layers[0], last_layers[1], "ip1", load_weight_force=True)
+        self.prob = tf.nn.softmax(self.fc1, name="prob")
 
         # COST - TRAINING
         self.cost = tf.reduce_mean((self.prob - target) ** 2)
@@ -109,6 +130,7 @@ class ALEXNET:
             var = tf.constant(value, dtype=tf.float32, name=var_name)
 
         self.var_dict[(name, idx)] = var
+        print(var.get_shape(), initial_value.get_shape())
         assert var.get_shape() == initial_value.get_shape()
         return var
 

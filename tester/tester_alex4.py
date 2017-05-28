@@ -28,11 +28,11 @@ else:
 # path_data_train = path + 'ISB_Train_complete.csv'
 # path_data_test = path + 'ISB_Test_complete.csv'
 
-path = '../../data/CIFAR_100/data/'
-path_dir_image_train = path + "data_train/"
-path_dir_image_test = path + "data_test/"
-path_data_train = path + 'cifar100_train_label.csv'
-path_data_test = path + 'cifar100_test_label.csv'
+path = '../../data/matlab_scripts/'
+path_dir_image_train = path + "SVHN_train/"
+path_dir_image_test = path + "SVHN_test/"
+path_data_train = path + 'SVHN_train_label.csv'
+path_data_test = path + 'SVHN_test_label.csv'
 
 # VALIDATE INPUT DATA
 assert os.path.exists(path), 'No existe el directorio de datos ' + path
@@ -52,7 +52,7 @@ def test_model(net, sess_test, objData):
     for i in range(objData.total_batchs_complete):
 
         batch, label = objData.generate_batch()
-        prob, layer = sess_test.run([net.prob, net.pool3], feed_dict={vgg_batch: batch, train_mode: False})
+        prob, layer = sess_test.run([net.prob, net.pool3], feed_dict={vgg_batch: batch})
 
         # save output of a layer
         # utils.save_layer_output(layer, label, name='layer_128', dir='../data/features/')
@@ -89,7 +89,7 @@ def train_model(net, sess_train, objData, epoch):
             label = list(sess_train.run(label))
             # Run training
             t_start = time.time()
-            _, cost = sess_train.run([net.train, net.cost], feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
+            _, cost = sess_train.run([net.train, net.cost], feed_dict={vgg_batch: batch, vgg_label: label})
             t_end = time.time()
             # Next slice batch
             objData.next_batch()
@@ -106,14 +106,15 @@ def train_model(net, sess_train, objData, epoch):
 if __name__ == '__main__':
 
     # LOad y save  weights
-    path_load_weight = '../../data/cifar100caffe/cifar100.npy'
+    path_load_weight = '../../data/matlab_scripts/svhn.npy'
     path_save_weight = '../weight/save_alex4_1.npy'
     load_weight_fc = True
 
     # Ultimas capas de la red
     dim_image = 32
-    num_class = 100
+    num_class = 10
     last_layers = [768, num_class]
+
     epoch = 2
     mini_batch_train = 25
     mini_batch_test = 30
@@ -125,14 +126,16 @@ if __name__ == '__main__':
     data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, 1], random=False, xtype='.jpg', dim_image=dim_image)
     # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], random=False, xtype='.jpg', dim_image=dim_image)
 
-    with tf.Session() as sess:
+    c = tf.ConfigProto()
+    c.gpu_options.visible_device_list = "0"
+
+    with tf.Session(config=c) as sess:
         # DEFINE MODEL
         vgg_batch = tf.placeholder(tf.float32, [None, dim_image, dim_image, 3])
         vgg_label = tf.placeholder(tf.float32, [None, last_layers[1]])
-        train_mode = tf.placeholder(tf.bool)
 
         # Initialize of the model VGG19
-        alex = ALEX.ALEXNET(path_load_weight, learning_rate=learning_rate, load_weight_fc=load_weight_fc)
+        alex = ALEX.ALEXNET(path_load_weight, learning_rate=learning_rate, load_weight_fc=load_weight_fc, dim_image=dim_image)
         alex.build(input_batch=vgg_batch, target=vgg_label, last_layers=last_layers)
         sess.run(tf.global_variables_initializer())
 

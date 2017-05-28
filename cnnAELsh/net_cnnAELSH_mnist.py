@@ -66,7 +66,7 @@ class cnn_ae_lsh:
         # ----------------
         # NET VGG ONLY MLP
 
-        self.fc1 = self.fc_layer(self.pool2, 800, 500, "ip1")
+        self.fc1 = self.fc_layer(self.x_batch, 800, 500, "ip1")
         self.relu1 = tf.nn.relu(self.fc1)
         self.fc2 = self.fc_layer(self.relu1, 500, 100, "latent")
         self.relu2 = tf.nn.relu(self.fc2)

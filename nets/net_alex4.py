@@ -30,8 +30,8 @@ class ALEXNET:
         start_time = time.time()
         print("build model started")
         self.conv1 = self.conv_layer(input_batch, 3, 64, 4, 1, 1, padding='VALID', relu=False, name="conv1")
-        self.conv1a = self.conv_layer(input_batch, 64, 42, 1, 1, 1, relu=False, name="cccp1a")
-        self.conv1b = self.conv_layer(input_batch, 42, 32, 1, 1, 1, relu=False, name="cccp1b")
+        self.conv1a = self.conv_layer(self.conv1, 64, 42, 1, 1, 1, relu=False, name="cccp1a")
+        self.conv1b = self.conv_layer(self.conv1a, 42, 32, 1, 1, 1, relu=False, name="cccp1b")
         self.pool1 = self.max_pool(self.conv1b, 3, 3, 2, 2, name='pool1')
 
         self.conv2 = self.conv_layer(self.pool1, 32, 42, 4, 1, 1, padding='VALID', relu=False, name="conv2")

@@ -26,6 +26,7 @@ import os
 import numpy as np
 import pandas as pd
 from tools import utils
+from tensorflow_manage_nets.tools import utils
 
 # ----------------------- #
 # MANAGE DATASET FROM NPY #
@@ -41,7 +42,7 @@ class Dataset:
         random: Si es true automaticamente de reordenara al definir el objeto 'Dataset'
     """
 
-    def __init__(self, path_data='', path_dir_images='', minibatch=25, cols=[], restrict=False, random=True, xtype=".jpg"):
+    def __init__(self, path_data='', path_dir_images='', minibatch=25, cols=[], restrict=False, random=True, xtype=".jpg", dim_image=224):
 
         assert os.path.exists(path_data), 'No existe el archivo con los datos de entrada ' + path_data
 
@@ -50,6 +51,7 @@ class Dataset:
         self.minibatch = minibatch
         self.cols = cols
         self.type = xtype
+        self.dim_image = dim_image
 
         # leemos el archivo csv y guardamos las columnas 0 y 2 (nombre de imagen y etiqueta respectivamente)
         data = pd.read_csv(path_data, header=None)
@@ -91,8 +93,8 @@ class Dataset:
         # cargamos las imagenes y estas son tratadas para darles el tamaño requerido
         for i in range(start, end):
             # print(self.images[i], i)
-            img = utils.load_image(self.dir_images + str(self.images[i]) + self.type)[:, :, :3]
-            batch_list.append(img.reshape((1, 224, 224, 3)))
+            img = utils.load_image(self.dir_images + str(self.images[i]) + self.type, dim_image=self.dim_image)[:, :, :3]
+            batch_list.append(img.reshape((1, self.dim_image, self.dim_image, 3)))
             label_list.append(self.labels[i])
 
         # concatena cada elemento del batch_list dando como resultado una matriz con la forma (n, 224, 224, 3)

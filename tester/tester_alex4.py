@@ -111,6 +111,7 @@ if __name__ == '__main__':
     load_weight_fc = True
 
     # Ultimas capas de la red
+    dim_image = 32
     num_class = 100
     last_layers = [768, num_class]
     epoch = 2
@@ -120,13 +121,13 @@ if __name__ == '__main__':
     accuracy = 0
 
     # GENERATE DATA
-    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], restrict=False, xtype='.jpg')
-    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, 1], random=False, xtype='.jpg')
-    # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], random=False, xtype='.jpg')
+    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], restrict=False, xtype='.jpg', dim_image=dim_image)
+    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, 1], random=False, xtype='.jpg', dim_image=dim_image)
+    # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], random=False, xtype='.jpg', dim_image=dim_image)
 
     with tf.Session() as sess:
         # DEFINE MODEL
-        vgg_batch = tf.placeholder(tf.float32, [None, 32, 32, 3])
+        vgg_batch = tf.placeholder(tf.float32, [None, dim_image, dim_image, 3])
         vgg_label = tf.placeholder(tf.float32, [None, last_layers[1]])
         train_mode = tf.placeholder(tf.bool)
 

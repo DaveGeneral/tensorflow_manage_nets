@@ -16,11 +16,11 @@ from itertools import cycle
 
 # returns image of shape [224, 224, 3]
 # [height, width, depth]
-def load_image(path, scale=255, xrange=[0, 1]):
+def load_image(path, scale=255, xrange=[0, 1], dim_image=224):
     # load image
     img = skimage.io.imread(path)
     img = img / scale
-    assert (xrange[0] <= img).all() and (img <= xrange[1]).all()
+    # assert (xrange[0] <= img).all() and (img <= xrange[1]).all()
     # print "Original Image Shape: ", img.shape
     # we crop image from center
     short_edge = min(img.shape[:2])
@@ -28,7 +28,7 @@ def load_image(path, scale=255, xrange=[0, 1]):
     xx = int((img.shape[1] - short_edge) / 2)
     crop_img = img[yy: yy + short_edge, xx: xx + short_edge]
     # resize to 224, 224
-    resized_img = skimage.transform.resize(crop_img, (224, 224), mode='constant')
+    resized_img = skimage.transform.resize(crop_img, (dim_image, dim_image), mode='constant')
     return resized_img
 
 

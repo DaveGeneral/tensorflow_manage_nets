@@ -5,7 +5,7 @@ import time
 import inspect
 
 #VGG_MEAN = [103.939, 116.779, 123.68] original
-VGG_MEAN = [111.61/255, 113.16/255, 120.57/255]
+VGG_MEAN = [111.61, 113.16, 120.57]
 
 
 class ALEXNET:
@@ -45,9 +45,9 @@ class ALEXNET:
         # ])
 
         bgr = tf.concat(axis=3, values=[
-            red - VGG_MEAN[2],
+            red - VGG_MEAN[0],
             green - VGG_MEAN[1],
-            blue - VGG_MEAN[0],
+            blue - VGG_MEAN[2],
         ])
         assert bgr.get_shape().as_list()[1:] == [self.dim_image, self.dim_image, 3]
 
@@ -58,7 +58,7 @@ class ALEXNET:
 
         self.conv2 = self.conv_layer(self.lrn1, 32, 32, 5, 1, 1, name="conv2")
         self.pool2 = self.avg_pool(self.conv2, 3, 3, 2, 2, name='pool2')
-        self.lrn2 = tf.nn.lrn(self.relu1, depth_radius=1, alpha=1.66666662456e-05, beta=0.75, bias=1.0, name='norm2')
+        self.lrn2 = tf.nn.lrn(self.pool2, depth_radius=1, alpha=1.66666662456e-05, beta=0.75, bias=1.0, name='norm2')
 
         self.conv3 = self.conv_layer(self.lrn2, 32, 64, 5, 1, 1, name="conv3")
         self.pool3 = self.avg_pool(self.conv3, 3, 3, 2, 2, name='pool3')

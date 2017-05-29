@@ -113,7 +113,7 @@ if __name__ == '__main__':
     # Ultimas capas de la red
     dim_image = 32
     num_class = 10
-    last_layers = [768, num_class]
+    last_layers = [1024, num_class]
 
     epoch = 2
     mini_batch_train = 25

@@ -4,8 +4,8 @@ import numpy as np
 import time
 import inspect
 
-VGG_MEAN = [103.939, 116.779, 123.68]
-
+#VGG_MEAN = [103.939, 116.779, 123.68]
+VGG_MEAN = [120.57, 113.16, 111.61]
 
 class VGG19:
 
@@ -204,3 +204,4 @@ class VGG19:
         np.save(npy_path, data_dict)
         print("File saved", npy_path)
         return npy_path
+

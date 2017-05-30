@@ -83,6 +83,28 @@ class Dataset:
 
     #
     # Generamos el batch en la posicion actual donde se encuentras los punteros self.start y self.end
+    def generate_batch_withoutscale(self):
+
+        start = self.start
+        end = self.end
+        batch_list = []
+        label_list = []
+
+        # cargamos las imagenes y estas son tratadas para darles el tamaño requerido
+        for i in range(start, end):
+            # print(self.images[i], i)
+            img = utils.load_image_withoutscale(self.dir_images + str(self.images[i]) + self.type,
+                                                dim_image=self.dim_image)[:, :, :3]
+            batch_list.append(img.reshape((1, self.dim_image, self.dim_image, 3)))
+            label_list.append(self.labels[i])
+
+        # concatena cada elemento del batch_list dando como resultado una matriz con la forma (n, 224, 224, 3)
+        # retorna el batch_list concatenado y el label_list con n items, una etiqueta para cada imagen
+        return np.concatenate([block for block in batch_list], 0), label_list
+
+
+    #
+    # Generamos el batch en la posicion actual donde se encuentras los punteros self.start y self.end
     def generate_batch(self):
 
         start = self.start

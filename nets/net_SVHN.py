@@ -39,7 +39,6 @@ class SVHN_NET:
         start_time = time.time()
         print("build model started")
 
-
         self.conv1 = self.conv_layer(input_batch, 3, 48, 5, 1, 1, padding='VALID', relu=True, name="conv1", bias=0.0)
         self.pool1 = self.max_pool(self.conv1, 2, 2, 2, 2, padding='SAME', name='pool1')
         self.lrn1 = tf.nn.local_response_normalization(self.pool1, name='norm1')
@@ -48,7 +47,7 @@ class SVHN_NET:
         self.pool2 = self.max_pool(self.conv2, 2, 2, 2, 2, padding='SAME', name='pool2')
         self.lrn2 = tf.nn.local_response_normalization(self.pool2, name='norm2')
 
-        self.conv3 = self.conv_layer(self.lrn2, 64, 128, 5, 1, 1, padding='VALID', relu=True, name="conv3", bias=0.1)
+        self.conv3 = self.conv_layer(self.lrn2, 64, 128, 5, 1, 1, padding='SAME', relu=True, name="conv3", bias=0.1)
         self.lrn3 = tf.nn.local_response_normalization(self.conv3, name='norm3')
 
         if self.lrn3.get_shape().as_list()[1] is 1:  # Is already reduced.
@@ -61,7 +60,7 @@ class SVHN_NET:
         self.pool3 = tf.cond(train_mode, lambda: tf.nn.dropout(self.pool3, self.dropout), lambda: self.pool3)
         #self.fc1 = tf.reshape(self.pool3, [shape[0], -1])
 
-        self.fc1 = self.fc_layer(self.pool3, 128, 160, "fc1", bias=0.05)
+        self.fc1 = self.fc_layer(self.pool3, 1152, 160, "fc1", bias=0.05)
         self.relu1 = tf.nn.relu(self.fc1)
 
         self.logits = self.fc_layer(self.relu1, 160, 10, "fc2", bias=0.05)
@@ -81,10 +80,12 @@ class SVHN_NET:
 
     # Layer MaxPool
     def max_pool(self, bottom, k_h, k_w, s_h, s_w, padding='SAME', name=''):
+        #print(name,np.shape(bottom))
         return tf.nn.max_pool(bottom, ksize=[1, k_h, k_w, 1], strides=[1, s_h, s_w, 1], padding=padding, name=name)
 
     # Layer Convolutional
     def conv_layer(self, bottom, in_channels, out_channels, filter_size=3, s_h=1, s_w=1, group=1, padding='SAME', relu=True, name='', bias=0.0):
+        #print(name,np.shape(bottom))
         with tf.variable_scope(name):
             filt, conv_biases = self.get_conv_var(filter_size, int(in_channels / group), out_channels, name, bias)
 
@@ -133,12 +134,14 @@ class SVHN_NET:
             else:
                 var = value
 
+        #print(var.get_shape(), initial_value.get_shape())
         self.var_dict[(name, idx)] = var
         assert var.get_shape() == initial_value.get_shape()
         return var
 
     # Layer FullConnected
     def fc_layer(self, bottom, in_size, out_size, name, load_weight_force=True, bias=0.0):
+        #print(name,np.shape(bottom))
         with tf.variable_scope(name):
             weights, biases = self.get_fc_var(in_size, out_size, name, load_weight_force, bias)
             #x = bottom
@@ -181,7 +184,7 @@ class SVHN_NET:
             else:
                 var = value
 
-        # print(var.get_shape(), initial_value.get_shape())
+        #print(var.get_shape(), initial_value.get_shape())
         self.var_dict[(name, idx)] = var
         assert var.get_shape() == initial_value.get_shape()
         return var

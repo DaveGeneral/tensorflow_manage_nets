@@ -27,7 +27,7 @@ class cnn_ae_lsh:
                  npy_convol_path=None,
                  npy_ae_path=None,
                  npy_ae_class_paths=None,
-                 normal_max_path=None,
+                 normal_max_path = None,
                  trainable=False,
                  num_class=0,
                  k_classes=1,
@@ -66,12 +66,11 @@ class cnn_ae_lsh:
         # ----------------
         # NET VGG ONLY MLP
 
-        self.fc1 = self.fc_layer(self.x_batch, 800, 500, "ip1")
+        self.fc1 = self.fc_layer(self.x_batch, 1152, 160, "fc1")
         self.relu1 = tf.nn.relu(self.fc1)
-        self.fc2 = self.fc_layer(self.relu1, 500, 100, "latent")
-        self.relu2 = tf.nn.relu(self.fc2)
-        self.fc3 = self.fc_layer(self.relu2, 100, 10, "ip2")
-        self.probVGG = tf.nn.softmax(self.fc3, name="prob")
+
+        self.logits = self.fc_layer(self.relu1, 160, 10, "fc2")
+        self.probVGG = tf.nn.softmax(self.logits, name="prob")
 
         # ------------------
         # AUTOENCODER GLOBAL
@@ -305,39 +304,38 @@ class cnn_ae_lsh:
     # -----------------------------------------------------------------
     # Funciones secunadarias
     # -----------------------------------------------------------------
+
     # Layer FullConnected
-    def fc_layer(self, bottom, in_size, out_size, name):
+    def fc_layer(self, bottom, in_size, out_size, name, bias=0.0):
+        print(name, np.shape(bottom))
         with tf.variable_scope(name):
             weights, biases = self.get_fc_var(in_size, out_size, name)
-
             x = tf.reshape(bottom, [-1, in_size])
             fc = tf.nn.bias_add(tf.matmul(x, weights), biases)
             return fc
 
     # Generate Parameter FullConnect layer
-    def get_fc_var(self, in_size, out_size, name):
-        initial_value = tf.truncated_normal([in_size, out_size], 0.0, 0.001)
+    def get_fc_var(self, in_size, out_size, name, bias=0.0):
+        initial_value = tf.get_variable(name + "_weights", shape=[in_size, out_size])
         weights = self.get_var_fc(initial_value, name, 'weights', name + "_weights")
 
-        initial_value = tf.truncated_normal([out_size], .0, .001)
+        initial_value = tf.constant(bias, shape=[out_size])
         biases = self.get_var_fc(initial_value, name, 'biases', name + "_biases")
 
         return weights, biases
 
     # Construct dictionary with random parameters or load parameters
     def get_var_fc(self, initial_value, name, idx, var_name):
-
         if self.data_dict is not None and name in self.data_dict:
             value = self.data_dict[name][idx]
-        else:
-            value = initial_value
-
-        if self.trainable:
             var = tf.Variable(value, name=var_name)
         else:
-            var = tf.constant(value, dtype=tf.float32, name=var_name)
+            value = initial_value
+            if idx == 'biases':
+                var = tf.Variable(value, name=var_name)
+            else:
+                var = value
 
         self.var_dict[(name, idx)] = var
         assert var.get_shape() == initial_value.get_shape()
         return var
-

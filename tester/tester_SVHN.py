@@ -82,9 +82,8 @@ if __name__ == '__main__':
 
     # Ultimas capas de la red
     num_class = 10
-    epoch = 2
+    epoch = 128
     learning_rate = 0.075
-    accuracy = 0
 
     # GENERATE DATA
     data_train, labels_train = load_svhn_data("train", "cropped")
@@ -94,11 +93,11 @@ if __name__ == '__main__':
 
 
     #c = tf.ConfigProto(log_device_placement=False)
-    #c = tf.ConfigProto()
-    #c.gpu_options.visible_device_list = "2"
+    c = tf.ConfigProto()
+    c.gpu_options.visible_device_list = "0,2"
 
     start_time = time.time()
-    with tf.Session() as sess:
+    with tf.Session(config=c) as sess:
         # DEFINE MODEL
         svhn_batch = tf.placeholder(tf.float32, [None, 32, 32, 3])
         svhn_label = tf.placeholder(tf.float32, [None, num_class])
@@ -106,7 +105,7 @@ if __name__ == '__main__':
 
         # Initialize of the model VGG19
         svhn = SVHN.SVHN_NET(path_load_weight, num_class=num_class, l_rate=0.075, minibatch=256, train_size=train_size, test_size=test_size)
-        svhn.build(svhn_batch, svhn_label, train_mode)
+        svhn.build(svhn_batch, svhn_label, train_mode, load_lrate=True)
         sess.run(tf.global_variables_initializer())
 
         # # Execute Network
@@ -114,4 +113,4 @@ if __name__ == '__main__':
         train_model(net=svhn, sess_train=sess, objData=data_train, objLabel=labels_train, epoch=epoch, xtime=start_time)
         test_model(net=svhn, sess_test=sess, objData=data_test, objLabel=labels_test, xtime=start_time)
 
-        svhn.save_npy(sess,path_save_weight)
+        svhn.save_npy(sess, path_save_weight)

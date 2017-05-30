@@ -27,7 +27,12 @@ class SVHN_NET:
         self.train_size = train_size
         self.test_size = test_size
 
-    def build(self, input_batch, input_label, train_mode=True):
+    def build(self, input_batch, input_label, train_mode=True, load_lrate=False):
+
+        if self.data_dict is not None and 'l_rate' in self.data_dict and load_lrate is True:
+            value = self.data_dict['l_rate'][0]
+            self.l_rate = value
+            print('Load Learning_rate...')
 
         global_step = tf.Variable(0, trainable=False)
 
@@ -184,7 +189,7 @@ class SVHN_NET:
     # Save weight model
     def save_npy(self, sess, npy_path="./vgg19-save.npy"):
         assert isinstance(sess, tf.Session)
-
+        self.var_dict[('l_rate', 0)] = self.learning_rate
         data_dict = {}
 
         for (name, idx), var in list(self.var_dict.items()):

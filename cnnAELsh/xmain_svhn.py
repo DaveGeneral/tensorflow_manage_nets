@@ -13,11 +13,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 
 if switch_server is True:
     from tools import utils
-    from cnnAELsh import net_cnnAELSH as CAL
+    from cnnAELsh import net_cnnAELSH_svhn as CAL
     from tools.dataset_csv import Dataset_csv
 else:
     from tensorflow_manage_nets.tools import utils
-    from tensorflow_manage_nets.cnnAELsh import net_cnnAELSH as CAL
+    from tensorflow_manage_nets.cnnAELsh import net_cnnAELSH_svhn as CAL
     from tensorflow_manage_nets.tools.dataset_csv import Dataset_csv
 
 # ..................................................................
@@ -30,8 +30,8 @@ num_class = 10
 
 # DATA REDUCIDA
 path = '../data/SVHN_data/'
-path_data_train_all = [path + 'train1152' + 'output_train_SVHN.csv']
-path_data_test_all = [path + 'test1152' + 'output_test_SVHN.csv']
+path_data_train_all = [path + 'train1152/' + 'output_train_SVHN.csv']
+path_data_test_all = [path + 'test1152/' + 'output_test_SVHN.csv']
 path_normalization_max = path + 'maximo_svhn1152.csv'
 
 # PESOS ENTRENADOS

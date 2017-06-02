@@ -307,7 +307,7 @@ class cnn_ae_lsh:
 
     # Layer FullConnected
     def fc_layer(self, bottom, in_size, out_size, name, bias=0.0):
-        print(name, np.shape(bottom))
+        #print(name, np.shape(bottom))
         with tf.variable_scope(name):
             weights, biases = self.get_fc_var(in_size, out_size, name)
             x = tf.reshape(bottom, [-1, in_size])

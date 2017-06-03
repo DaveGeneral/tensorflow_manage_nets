@@ -32,11 +32,19 @@ else:
 # ..................................................................
 
 # GLOBAL VARIABLES
-path = '../../data/ISB2016/'
-path_dir_image_train = path + "image_train_complete/"
-path_dir_image_test = path + "image_test_complete/"
-path_data_train = path + 'ISB_Train_complete.csv'
-path_data_test = path + 'ISB_Test_complete.csv'
+# Data ISBN
+# path = '../../data/ISB2016/'
+# path_dir_image_train = path + "image_train_complete/"
+# path_dir_image_test = path + "image_test_complete/"
+# path_data_train = path + 'ISB_Train_complete.csv'
+# path_data_test = path + 'ISB_Test_complete.csv'
+
+# Data melanoma
+path = '../../data/melanoma/'
+path_dir_image_train = path + 'train/'
+path_dir_image_test = path + 'test/'
+path_data_train = path + 'data_train.csv'
+path_data_test = path + 'data_test.csv'
 
 # VALIDATE INPUT DATA
 assert os.path.exists(path), 'No existe el directorio de datos ' + path
@@ -110,12 +118,12 @@ def train_model(net, sess_train, objData, epoch):
 if __name__ == '__main__':
 
     path_load_weight = '../weight/vgg19.npy'
-    path_save_weight = '../weight/save_1.npy'
+    path_save_weight = '../weight/save_melanomaA_1536.npy'
     load_weight_fc = False
-    num_class = 2
+    num_class = 3
 
-    epoch = 40
-    mini_batch_train = 20
+    epoch = 10
+    mini_batch_train = 25
     mini_batch_test = 30
     learning_rate = 0.0005
 
@@ -123,9 +131,9 @@ if __name__ == '__main__':
     accuracy = 0
 
     # GENERATE DATA
-    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], restrict=True)
-    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, 1], random=False)
-    # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], random=False)
+    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], xtype='')
+    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, 1], random=False, xtype='')
+    # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], random=False, xtype='')
 
     with tf.Session() as sess:
 

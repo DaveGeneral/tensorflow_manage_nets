@@ -96,7 +96,7 @@ class VGG19:
 
         # COST - TRAINING
         self.cost = tf.reduce_mean((self.prob - target) ** 2)
-        # self.train = tf.train.AdamOptimizer(self.learning_rate).minimize(self.cost)
+        #self.train = tf.train.AdamOptimizer(self.learning_rate).minimize(self.cost)
         self.train = tf.train.GradientDescentOptimizer(self.learning_rate).minimize(self.cost)
 
         self.data_dict = None
@@ -173,6 +173,7 @@ class VGG19:
         else:
             var = tf.constant(value, dtype=tf.float32, name=var_name)
 
+        print(var.get_shape(), initial_value.get_shape())
         self.var_dict[(name, idx)] = var
         assert var.get_shape() == initial_value.get_shape()
         return var
@@ -192,3 +193,4 @@ class VGG19:
         np.save(npy_path, data_dict)
         print("File saved", npy_path)
         return npy_path
+

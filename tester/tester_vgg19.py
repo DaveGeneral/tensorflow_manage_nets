@@ -41,6 +41,7 @@ else:
 
 # Data melanoma
 path = '../../data/melanoma/'
+path_weight = '../weight/melanoma/'
 path_dir_image_train = path + 'train/'
 path_dir_image_test = path + 'test/'
 path_data_train = path + 'data_train.csv'
@@ -101,7 +102,7 @@ def train_model(net, sess_train, objData, epoch):
             label = list(sess_train.run(label))
             # Run training
             t_start = time.time()
-            _, cost = sess_train.run([net.train, net.cost], feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
+            _, cost  = sess_train.run([net.train, net.cost], feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
             t_end = time.time()
             # Next slice batch
             objData.next_batch()
@@ -118,12 +119,12 @@ def train_model(net, sess_train, objData, epoch):
 if __name__ == '__main__':
 
     path_load_weight = '../weight/vgg19.npy'
-    path_save_weight = '../weight/save_melanomaA_1536.npy'
+    path_save_weight = path_weight + 'save_melanomaA_1536.npy'
     load_weight_fc = False
     num_class = 3
 
     epoch = 10
-    mini_batch_train = 25
+    mini_batch_train = 15
     mini_batch_test = 30
     learning_rate = 0.0005
 
@@ -148,7 +149,7 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
 
         # Execute Network
-        test_model(net=vgg, sess_test=sess, objData=data_test)
+        #test_model(net=vgg, sess_test=sess, objData=data_test)
         train_model(net=vgg, sess_train=sess, objData=data_train, epoch=epoch)
         accuracy = test_model(net=vgg, sess_test=sess, objData=data_test)
 

@@ -55,40 +55,43 @@ assert os.path.exists(path_data_test), 'No existe el archivo con los datos de pr
 
 # Función, fase de test
 def test_model(net, sess_test, objData):
-
     total = objData.total_images
     count_success = 0
     count_by_class = np.zeros([net.num_class, net.num_class])
+
     prob_predicted = []
+    plot_predicted = []
+    label_total = []
+    prob_total = np.random.random((0, net.num_class))
 
     print('\n# PHASE: Test classification')
     for i in range(objData.total_batchs_complete):
-
         batch, label = objData.generate_batch()
         prob, layer = sess_test.run([net.prob, net.relu6], feed_dict={vgg_batch: batch, train_mode: False})
+
+        label_total = np.concatenate((label_total, label), axis=0)
+        prob_total = np.concatenate((prob_total, prob), axis=0)
 
         # save output of a layer
         # utils.save_layer_output(layer, label, name='Train_SNC4_relu6', dir='../data/features/')
         # utils.save_layer_output_by_class(layer, label, name='Train_SNC4', dir='../data/features/')
 
-        # Acumulamos los aciertos de cada iteracion, para despues hacer un promedio
-        count, count_by_class, prob_predicted = utils.print_accuracy(label, prob, matrix_confusion=count_by_class, predicted=prob_predicted)
+        count, prob_predicted, plot_predicted = utils.process_prob(label, prob, predicted=prob_predicted,
+                                                                   plot_predicted=plot_predicted)
         count_success = count_success + count
         objData.next_batch_test()
 
-    # promediamos la precision total
-    accuracy_final = count_success/total
-    print('\n# STATUS: Confusion Matrix')
-    print(count_by_class)
-    print('    Success total: ', str(count_success))
-    print('    Accuracy total: ', str(accuracy_final))
+    # promediamos la presicion total
+    print('\n# STATUS:')
+    y_true = objData.labels
+    y_prob = prob_predicted
+    accuracy_final = utils.metrics_multiclass(y_true, y_prob)
 
     return accuracy_final
 
 
 # Funcion, fase de entrenamiento
 def train_model(net, sess_train, objData, epoch):
-
     print('\n# PHASE: Training model')
     for ep in range(epoch):
         print('\n     Epoch:', ep)
@@ -102,7 +105,8 @@ def train_model(net, sess_train, objData, epoch):
             label = list(sess_train.run(label))
             # Run training
             t_start = time.time()
-            _, cost  = sess_train.run([net.train, net.cost], feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
+            _, cost = sess_train.run([net.train, net.cost],
+                                     feed_dict={vgg_batch: batch, vgg_label: label, train_mode: True})
             t_end = time.time()
             # Next slice batch
             objData.next_batch()
@@ -117,10 +121,9 @@ def train_model(net, sess_train, objData, epoch):
 
 
 if __name__ == '__main__':
-
-    path_load_weight = '../weight/vgg19.npy'
+    path_load_weight = '../weight/melanoma/melanoma_1536_84.npy'
     path_save_weight = path_weight + 'save_melanomaA_1536.npy'
-    load_weight_fc = False
+    load_weight_fc = True
     num_class = 3
 
     epoch = 10
@@ -132,12 +135,13 @@ if __name__ == '__main__':
     accuracy = 0
 
     # GENERATE DATA
-    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], xtype='')
-    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test, cols=[0, 1], random=False, xtype='')
+    data_train = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train,
+                         cols=[0, 1], xtype='')
+    data_test = Dataset(path_data=path_data_test, path_dir_images=path_dir_image_test, minibatch=mini_batch_test,
+                        cols=[0, 1], random=False, xtype='')
     # data_test = Dataset(path_data=path_data_train, path_dir_images=path_dir_image_train, minibatch=mini_batch_train, cols=[0, 1], random=False, xtype='')
 
     with tf.Session() as sess:
-
         # DEFINE MODEL
         vgg_batch = tf.placeholder(tf.float32, [None, 224, 224, 3])
         vgg_label = tf.placeholder(tf.float32, [None, num_class])
@@ -149,7 +153,7 @@ if __name__ == '__main__':
         sess.run(tf.global_variables_initializer())
 
         # Execute Network
-        #test_model(net=vgg, sess_test=sess, objData=data_test)
+        test_model(net=vgg, sess_test=sess, objData=data_test)
         train_model(net=vgg, sess_train=sess, objData=data_train, epoch=epoch)
         accuracy = test_model(net=vgg, sess_test=sess, objData=data_test)
 

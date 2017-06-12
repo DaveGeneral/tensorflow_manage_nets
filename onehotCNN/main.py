@@ -52,11 +52,11 @@ def train_model(net, sess_train, objData, objDatatest, epoch):
     for ep in range(epoch):
         for i in range(objData.total_batchs):
             batch, _ = objData.generate_batch()
-            sess_train.run(net.train, feed_dict={x_batch: batch})
+            _, cost = sess_train.run([net.train, net.cost], feed_dict={x_batch: batch})
             objData.next_batch()
 
             # cost_tot, cost_prom, _ = test_model(net, sess_train, objDatatest)
-            # print('     Epoch', ep, ': ', cost_tot, ' / ', cost_prom)
+            print('     Epoch', ep, ': ', cost, ' / ', cost/objData.minibatch)
 
 
 # Función, Fase de test - clasificacion

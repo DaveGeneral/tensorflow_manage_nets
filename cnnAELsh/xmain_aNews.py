@@ -13,11 +13,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
 
 if switch_server is True:
     from tools import utils
-    from cnnAELsh import net_cnnAELSH as CAL
+    from cnnAELsh import net_cnnAELSH_aNew as CAL
     from tools.dataset_csv import Dataset_csv
 else:
     from tensorflow_manage_nets.tools import utils
-    from tensorflow_manage_nets.cnnAELsh import net_cnnAELSH as CAL
+    from tensorflow_manage_nets.cnnAELsh import net_cnnAELSH_aNew as CAL
     from tensorflow_manage_nets.tools.dataset_csv import Dataset_csv
 
 # ..................................................................

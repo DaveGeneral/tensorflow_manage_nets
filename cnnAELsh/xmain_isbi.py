@@ -4,6 +4,8 @@ import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
+from numpy import genfromtxt
+import numpy as np
 
 switch_server = True
 
@@ -40,11 +42,27 @@ path_w_cnn = path_weight + 'save_cnn.npy'
 path_w_ae_all = path_weight + 'save_ae_all.npy'
 path_w_ae_class = []
 for i in range(num_class):
-    path_w_ae_class.append(path_weight + 'save_ae_class'+str(i)+'.npy')
+    path_w_ae_class.append(path_weight + 'save_ae_class' + str(i) + '.npy')
+
+
+def concatenate(out_layer, label):
+    print("concatenate")
+    total = len(label)
+    lab = np.reshape(label, (total, 1))
+    res = np.concatenate((out_layer, lab), axis=1)
+    return res
+
+
+def save_csv(X, file_name):
+    print("saving ..." + file_name)
+    f = open(file_name + '.csv', 'w')
+    lenght = len(X)
+    for i in range(lenght):
+        f.write(','.join(map(str, X[i])) + '\n')
+    f.close()
 
 
 if __name__ == '__main__':
-
     c = tf.ConfigProto()
     c.gpu_options.visible_device_list = "1,2"
 
@@ -79,9 +97,44 @@ if __name__ == '__main__':
 
             # Procces CNN+AE-Global-Class
             # Dim x = (1, 4096) | return Dim (1, k_classes+1, 512+label+%=514)
-            #x = []
-            #result = calsh.search_sample_2(sample=x)
+            # x = []
+            # result = calsh.search_sample_2(sample=x)
 
-            #data = [[],[],[]]
-            #calsh.generate_data_encode_matrix(data=data, normalize=True)
+            # data = [[],[],[]]
+            # calsh.generate_data_encode_matrix(data=data, normalize=True)
+            X = genfromtxt(path_data_train_all[0], delimiter=',')
+            shape = np.shape(X)
+            print(shape)
+            labelX = X[:, shape[1] - 1:]
+            X = X[:, :shape[1] - 1]
+
+            X = np.vstack(X)
+            X = X.astype(np.float)
+
+            # data = [[],[],[]]
+            resultX = calsh.generate_data_encode_matrix(data=X, normalize=True)
+            shape = np.shape(resultX)
+            print(shape)
+            # ------------------------------------
+            Y = genfromtxt(path_data_test_all[0], delimiter=',')
+            shape = np.shape(Y)
+            print(shape)
+            labelY = Y[:, shape[1] - 1:]
+            Y = Y[:, :shape[1] - 1]
+
+            Y = np.vstack(Y)
+            Y = Y.astype(np.float)
+
+            # data = [[],[],[]]
+            resultY = calsh.generate_data_encode_matrix(data=Y, normalize=True)
+            shape = np.shape(resultY)
+            print(shape)
+
+            # Save to CSV
+            file_name_train = path + "isbi_512.train"
+            file_name_test = path + "isbi_512.test"
+            train = concatenate(resultX, labelX)
+            test = concatenate(resultY, labelY)
+            save_csv(train, file_name_train)
+            save_csv(test, file_name_test)
 

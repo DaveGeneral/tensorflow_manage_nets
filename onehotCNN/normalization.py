@@ -73,14 +73,16 @@ def path_datasets(opc):
 
 if __name__ == '__main__':
 
+    directory = pathx + 'normalized/'
+
     for i in range(5):
         opc = i
         name, path_csv = path_datasets(opc)
-        new_norm_csv = path_csv[0][:-4] + '_norm' + path_csv[0][-4:]
-        
+        new_norm_csv = path_csv[0].split('/')[-1] + '_norm' + path_csv[0][-4:]
+
         print('Normalize Data', name, ':')
         utils.generate_MinMax_csvData(path_csv, pathx, name, has_label=True)
-        utils.normalization_with_minMax([path_csv[0], pathx+'minimo_'+name+'.csv', pathx+'maximo_'+name+'.csv'], new_norm_csv)
+        utils.normalization_with_minMax([path_csv[0], pathx+'minimo_'+name+'.csv', pathx+'maximo_'+name+'.csv'], directory + new_norm_csv)
         print('complete!')
 
     print('Finish!!')

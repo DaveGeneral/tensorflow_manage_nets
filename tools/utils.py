@@ -596,8 +596,8 @@ def normalization_with_minMax(paths, path_save):
 
     diferencia = maximo - minimo
 
-    print(minimo)
-    print(maximo)
+    #print(minimo)
+    #print(maximo)
 
     with open(csv_original, 'r') as f:
         reader = csv.reader(f)
@@ -613,6 +613,7 @@ def normalization_with_minMax(paths, path_save):
             # print(",".join(map(str, np.concatenate((xi, [label]), axis=0))))
             f.write(",".join(map(str, np.concatenate((xi, [label]), axis=0))) + "\n")
         f.close()
+        print('Created data normalized,', path_save)
 
 
 def load_max_csvData(path_max):

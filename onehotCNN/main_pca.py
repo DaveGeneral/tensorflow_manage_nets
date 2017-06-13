@@ -4,6 +4,7 @@ import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
 from tune_subspace import getfractal
+from tune_subspace import computelshparams
 from sklearn.metrics import confusion_matrix
 from numpy import genfromtxt
 import numpy as np
@@ -26,7 +27,7 @@ else:
 # ..................................................................
 
 # GLOBAL VARIABLES
-#opc = 2
+# opc = 2
 
 path_data = '../data/onehotCNN/'
 path_weight = '../weight/onehotCNN/'
@@ -35,7 +36,6 @@ path_save_weight = path_weight + 'save_ae_mnist.npy'
 
 
 def path_datasets(opc):
-
     if opc == 0:
 
         # DATA MNIST
@@ -44,21 +44,9 @@ def path_datasets(opc):
         path_data_train = [path + 'train800/' + 'output_train-mnist-800.csv']
         path_data_test = [path + 'test800/' + 'output_test-mnist-800.csv']
         path_maximo = path + 'maximo_mnist800.csv'
-
-
+        datasetname = 'mnist'
 
     elif opc == 1:
-
-        # DATA agNews
-        dim_input = 8704
-        path = '../data/agnews/'
-        path_data_train = [path + 'output_train_news_8704.csv']
-        path_data_test = [path + 'output_test_news_8704.csv']
-        path_maximo = path + 'maximo_agnews.csv'
-
-
-
-    elif opc == 2:
 
         # Data CIFAR
         dim_input = 4096
@@ -66,9 +54,10 @@ def path_datasets(opc):
         path_data_train = [path + 'output_trainVGG_relu6.csv']
         path_data_test = [path + 'output_testVGG_relu6.csv']
         path_maximo = path + 'maximo.csv'
+        datasetname = 'cifar10'
 
 
-    elif opc == 3:
+    elif opc == 2:
 
         # DATA SVHN
         dim_input = 1152
@@ -76,8 +65,9 @@ def path_datasets(opc):
         path_data_train = [path + 'train1152/' + 'output_train_SVHN.csv']
         path_data_test = [path + 'test1152/' + 'output_test_SVHN.csv']
         path_maximo = path + 'maximo_svhn1152.csv'
+        datasetname = 'svhn'
 
-    elif opc == 4:
+    elif opc == 3:
 
         # DATA ISBI
         dim_input = 4096
@@ -85,8 +75,19 @@ def path_datasets(opc):
         path_data_train = [path + 'SKINfeaturesA_Train.csv']
         path_data_test = [path + 'SKINfeaturesA_Test.csv']
         path_maximo = path + 'maximo_ISBI.csv'
+        datasetname = 'isbi'
 
-    return dim_input, path, path_data_test, path_maximo
+    elif opc == 4:
+
+        # DATA agNews
+        dim_input = 8704
+        path = '../data/agnews/'
+        path_data_train = [path + 'output_train_news_8704.csv']
+        path_data_test = [path + 'output_test_news_8704.csv']
+        path_maximo = path + 'maximo_agnews.csv'
+        datasetname = 'agnews'
+
+    return dim_input, path, path_data_test, path_maximo, datasetname
 
 
 # assert os.path.exists(path), print('No existe el directorio de datos ' + path)
@@ -116,58 +117,94 @@ def reduce_using_pca(X_train, new_dim):
 
 if __name__ == '__main__':
 
-    mini_batch_train = 35
-    mini_batch_test = 5
-    epoch = 50
     learning_rate = 0.00005
     l_hidden = 16
     ratio_diff = 0.05
 
-    for i in range(5):
-        opc = i
-        dim_input, path, path_data_test, path_maximo = path_datasets(opc)
+    for x in range(5):
+        opc = x
+        print("DATASET", opc, ':')
+        print("----------")
+        dim_input, path, path_data_test, path_maximo, setname = path_datasets(opc)
 
-        #Damax = utils.load_max_csvData(path_maximo)
+        # Damax = utils.load_max_csvData(path_maximo)
         Xmatrix = genfromtxt(path_data_test[0], delimiter=',')
         shape = np.shape(Xmatrix)
-        Xmatrix = Xmatrix[:, :shape[1] - 1]
+
         labels = Xmatrix[:, -1:]
+        Xmatrix = Xmatrix[:, :shape[1] - 1]
 
         XFractal = getfractal(path, path_data_test[0].split('/')[-1], Xmatrix)
         print("fractal dimension of X:", XFractal)
-
-        oldF = 0.0
+        shape_M = np.shape(Xmatrix)
+        dim = shape_M[1]
+        oldF = -1.0
         newF = 0.0
         cen = True
-        i = 0
-        # and (newF < XFractal*0.9 )
-        while l_hidden < dim_input and (cen is True or abs(newF - oldF) > ratio_diff) and (newF < XFractal * 0.9):
+        l_hidden = 16
+        csv_setname = path_data_test[0].split('/')[-1]
+        print('csv_setname: ', csv_setname)
+        reducedMatrix = None
+        while l_hidden < dim_input and (abs(newF - oldF) > ratio_diff) and cen == True:
             print('\n[PRUEBA :', l_hidden, ']')
-            cen = False
             t0 = time.time()
 
+            oldReducedMatrix = reducedMatrix
             reducedMatrix = reduce_using_pca(Xmatrix, l_hidden)
-            dimFractal = getfractal(path, path_data_test[0].split('/')[-1], reducedMatrix)
+
+            dimFractal = getfractal(path, csv_setname, reducedMatrix)
 
             oldF = newF
             newF = dimFractal
 
-            i = i + 1
             print("iter:", l_hidden, oldF, newF)
-            l_hidden = l_hidden * 2
             total_time = (time.time() - t0)
             print("total_time:", total_time)
+
+            results_fn = path_data + setname + '.pca_fractal'
+            output = [setname, l_hidden, newF, total_time]
+            f = open(results_fn, 'a')
+            f.write('\t'.join(map(str, output)) + '\n')
+            f.close()
+
+            print('condition: ', (l_hidden < dim_input), (abs(newF - oldF) > ratio_diff), (newF < XFractal * 0.9))
+
             print("-------------------------------")
+            if newF < XFractal and (newF >= XFractal * 0.9):
+                cen = False
 
+            if (abs(newF - oldF) <= ratio_diff):
+                l_hidden = (int)(l_hidden / 2)
+                reducedMatrix = oldReducedMatrix
 
-        # save matrix
-        total = len(labels)
-        f = open(path_data + "output_" +opc+"_"+str(int(l_hidden/2))+".csv", "w")
-        for i in range(total):
-            f.write(",".join(map(str, np.concatenate((Xmatrix[i], labels[i]), axis=0))) + "\n")
+            l_hidden = l_hidden * 2  # next step
+
+        # write the fractal dimension of the original dataset
+        results_fn = path_data + setname + '.pca_fractal'
+        output = [setname, dim, XFractal, 0.0]
+        f = open(results_fn, 'a')
+        f.write('\t'.join(map(str, output)) + '\n')
         f.close()
 
+        # save matrix
+        print('Saving...')
+        total = len(labels)
+        filename_pca = path_data + setname + '-' + str(int(l_hidden / 2)) + "-pca.csv"
+        print('filename_pca:', filename_pca)
+        f = open(filename_pca, "w")
+        for i in range(total):
+            f.write(",".join(map(str, np.concatenate((reducedMatrix[i], labels[i]), axis=0))) + "\n")
+        f.close()
+        print('Save!!')
+
+        # compute lshparams
+        computelshparams(path_data, setname + '-' + str(int(l_hidden / 2)) + "-pca.csv", reducedMatrix)
+
         print('Finish Dataset!!!')
+        print("-------------------------------")
+        print("-------------------------------")
+
+
 
 
 

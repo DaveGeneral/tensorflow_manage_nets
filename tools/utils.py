@@ -540,6 +540,81 @@ def generate_max_csvData(sources, path_save, has_label=True, no_NaN=True):
     print("Save max vector, Dim =", str(len(maximo)), ', min =', myMin, ', max =', myMax)
 
 
+def generate_MinMax_csvData(sources, path_save, name_csv, has_label=True, no_NaN=True):
+    max_i = []
+    min_i = []
+    for file in sources:
+        with open(file, 'r') as f:
+            reader = csv.reader(f)
+            data = list(reader)
+            max_i.append(np.amax(np.float_(data), axis=0))
+            min_i.append(np.amin(np.float_(data), axis=0))
+
+    # Get Maximo
+    # ----------
+    if has_label is True:
+        maximo = np.amax(max_i, axis=0)[:-1]
+    else:
+        maximo = np.amax(max_i, axis=0)
+
+    myMax = max(maximo)
+    myMin = min(maximo)
+
+    if myMin == 0.0 and no_NaN == True:
+        maximo[maximo == 0] = 0.0001
+
+    myMin = min(maximo)
+
+    f = open(path_save + 'maximo_' + name_csv + '.csv', "w")
+    f.write(",".join(map(str, maximo)) + "\n")
+    f.close()
+    print("Save max vector, Dim =", str(len(maximo)), ', min =', myMin, ', max =', myMax)
+
+    # Get Minimo
+    # ----------
+    if has_label is True:
+        minimo = np.amin(min_i, axis=0)[:-1]
+    else:
+        minimo = np.amin(min_i, axis=0)
+
+    myMax = max(minimo)
+    myMin = min(minimo)
+
+    f = open(path_save + 'minimo_' + name_csv + '.csv', "w")
+    f.write(",".join(map(str, minimo)) + "\n")
+    f.close()
+    print("Save min vector, Dim =", str(len(minimo)), ', min =', myMin, ', max =', myMax)
+
+
+def normalization_with_minMax(paths, path_save):
+    csv_original = paths[0]
+    csv_minimo = paths[1]
+    csv_maximo = paths[2]
+
+    minimo = load_max_csvData(csv_minimo)
+    maximo = load_max_csvData(csv_maximo)
+
+    diferencia = maximo - minimo
+
+    print(minimo)
+    print(maximo)
+
+    with open(csv_original, 'r') as f:
+        reader = csv.reader(f)
+        dataset = list(reader)
+
+        f = open(path_save, "w")
+        for i in range(len(dataset)):
+            data = np.float_(dataset[i])
+
+            sample = data[:-1]
+            label = data[-1]
+            xi = (sample - minimo) / diferencia
+            # print(",".join(map(str, np.concatenate((xi, [label]), axis=0))))
+            f.write(",".join(map(str, np.concatenate((xi, [label]), axis=0))) + "\n")
+        f.close()
+
+
 def load_max_csvData(path_max):
 
     with open(path_max, 'r') as f:

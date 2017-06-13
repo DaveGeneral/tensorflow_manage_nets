@@ -3,7 +3,10 @@ import tensorflow as tf
 import sys, os
 import numpy as np
 import matplotlib.pyplot as plt
+from tune_subspace import getfractal
 from sklearn.metrics import confusion_matrix
+from numpy import genfromtxt
+import numpy as np
 
 switch_server = True
 
@@ -52,11 +55,11 @@ def train_model(net, sess_train, objData, objDatatest, epoch):
     for ep in range(epoch):
         for i in range(objData.total_batchs):
             batch, _ = objData.generate_batch()
-            _, cost = sess_train.run([net.train, net.cost], feed_dict={x_batch: batch})
+            sess_train.run(net.train, feed_dict={x_batch: batch})
             objData.next_batch()
 
             # cost_tot, cost_prom, _ = test_model(net, sess_train, objDatatest)
-            print('     Epoch', ep, ': ', cost, ' / ', cost/objData.minibatch)
+            # print('     Epoch', ep, ': ', cost_tot, ' / ', cost_prom)
 
 
 # Función, Fase de test - clasificacion
@@ -101,7 +104,7 @@ def plot_result(net, sess, batch, n_examples=5):
 # ..................................................................
 
 # GLOBAL VARIABLES
-opc = 0
+opc = 2
 
 if opc == 0:
 
@@ -171,19 +174,49 @@ elif opc == 4:
 assert os.path.exists(path), print('No existe el directorio de datos ' + path)
 assert os.path.exists(path_weight), print('No existe el directorio de pesos ' + path_weight)
 
+from sklearn.decomposition import IncrementalPCA
+from sklearn.decomposition import PCA
+
+
+def reduce_using_incpca(X_train, new_dim):
+    n_batches = 10
+    inc_pca = IncrementalPCA(n_components=new_dim)
+    for X_batch in np.array_split(X_train, n_batches):
+        inc_pca.partial_fit(X_batch)
+    X_reduced = inc_pca.transform(X_train)
+    return X_reduced
+
+
+def reduce_using_pca(X_train, new_dim):
+    n_batches = 10
+    pca = PCA(n_components=new_dim)
+    pca.fit(X_train)
+    X_reduced = pca.transform(X_train)
+    print(np.shape(X_reduced))
+    return X_reduced
+
+
 if __name__ == '__main__':
 
     mini_batch_train = 35
     mini_batch_test = 5
-    epoch = 1
+    epoch = 50
     learning_rate = 0.00005
-    l_hidden = 32
-    ratio_diff = 0.5
+    l_hidden = 16
+    ratio_diff = 0.05
+    pca = True
 
     Damax = utils.load_max_csvData(path_maximo)
     # data_train = Dataset_csv(path_data=path_data_train, minibatch=mini_batch_train, max_value=Damax, restrict=False)
     data_test = Dataset_csv(path_data=path_data_test, minibatch=mini_batch_test, max_value=Damax, restrict=False,
                             random=False)
+
+    Xmatrix = genfromtxt(path_data_train[0], delimiter=',')
+    shape = np.shape(Xmatrix)
+    Xmatrix = Xmatrix[:, :shape[1] - 1]
+
+    XFractal = getfractal(path, path_data_test[0].split('/')[-1], Xmatrix)
+    print("fractal dimension of X:", XFractal)
 
     c = tf.ConfigProto()
     c.gpu_options.visible_device_list = "0"
@@ -195,35 +228,48 @@ if __name__ == '__main__':
         newF = 0.0
         cen = True
         i = 0
-        while l_hidden < dim_input and (cen is True or (newF - oldF) > ratio_diff):
+        # and (newF < XFractal*0.9 )
+        while l_hidden < dim_input and (cen is True or abs(newF - oldF) > ratio_diff) and (newF < XFractal * 0.9):
             print('\n[PRUEBA :', l_hidden, ']')
             cen = False
-            layers = [[l_hidden, 'relu']]
+            t0 = time.time()
 
-            AEncode = AE.AEncoder(path_load_weight, learning_rate=learning_rate)
-            AEncode.build(x_batch, layers)
-            sess.run(tf.global_variables_initializer())
 
-            train_model(AEncode, sess, data_test, objDatatest=data_test, epoch=epoch)
-            _, _, matrix = test_model(AEncode, sess, data_test, l_hidden)
-            print(np.shape(matrix))
+            def reduce_using_autoencoders(new_dim):
+                layers = [[new_dim, 'relu']]
+                AEncode = AE.AEncoder(path_load_weight, learning_rate=learning_rate)
+                AEncode.build(x_batch, layers)
+                sess.run(tf.global_variables_initializer())
 
-            # dimFractal = alexFunction(matrix)
+                train_model(AEncode, sess, data_test, objDatatest=data_test, epoch=epoch)
+                _, _, matrix = test_model(AEncode, sess, data_test, new_dim)
+                print(np.shape(matrix))
+                return matrix
 
-            dimFractal = np.log(l_hidden)
+
+            if pca == True:
+                reducedMatrix = reduce_using_pca(Xmatrix, l_hidden)
+            else:
+                matrix = reduce_using_autoencoders(l_hidden)
+                # SAVE WEIGHTs
+                AEncode.save_npy(sess, path_save_weight)
+                del AEncode
+                reducedMatrix = matrix
+
+            dimFractal = getfractal(path, path_data_test[0].split('/')[-1], reducedMatrix)
 
             oldF = newF
             newF = dimFractal
 
-            # SAVE WEIGHTs
-            AEncode.save_npy(sess, path_save_weight)
             i = i + 1
-            print(i, oldF, newF)
+            print("iter:", l_hidden, oldF, newF)
             l_hidden = l_hidden * 2
-            del AEncode
+            total_time = (time.time() - t0)
+            print("total_time:", total_time)
             print("-------------------------------")
 
     print('Finish!!!')
+
 
 
 

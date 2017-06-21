@@ -87,6 +87,16 @@ def path_datasets(opc):
         path_maximo = path + 'maximo_agnews.csv'
         datasetname = 'agnews'
 
+    elif opc == 5:
+
+        # DATA serie temporal sintetica
+        dim_input = 60
+        path = '../data/syntheticChart/'
+        # path_data_train = [path + 'output_train_news_8704.csv']
+        path_data_test = [path + 'sChart.csv']
+        path_maximo = path + 'maximo_serieTemporal.csv'
+        datasetname = 'sChart'
+
     return dim_input, path, path_data_test, path_maximo, datasetname
 
 
@@ -121,7 +131,7 @@ if __name__ == '__main__':
     l_hidden = 16
     ratio_diff = 0.05
 
-    for x in range(5):
+    for x in range(0, 6):
         opc = x
         print("DATASET", opc, ':')
         print("----------")
@@ -141,7 +151,8 @@ if __name__ == '__main__':
         oldF = -1.0
         newF = 0.0
         cen = True
-        l_hidden = 16
+        # l_hidden = 16
+        l_hidden = 4
         csv_setname = path_data_test[0].split('/')[-1]
         print('csv_setname: ', csv_setname)
         reducedMatrix = None
@@ -177,7 +188,9 @@ if __name__ == '__main__':
                 l_hidden = (int)(l_hidden / 2)
                 reducedMatrix = oldReducedMatrix
 
-            l_hidden = l_hidden * 2  # next step
+            l_hidden = l_hidden + int(l_hidden / 2)  # next step
+
+            print(input())
 
         # write the fractal dimension of the original dataset
         results_fn = path_data + setname + '.pca_fractal'
@@ -203,11 +216,4 @@ if __name__ == '__main__':
         print('Finish Dataset!!!')
         print("-------------------------------")
         print("-------------------------------")
-
-
-
-
-
-
-
 

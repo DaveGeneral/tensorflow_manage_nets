@@ -255,11 +255,15 @@ def normalize(dataset, mini, maxi):
 if __name__ == '__main__':
 
     ratio_diff = 0.05
-    funcOpc = {'pca':[-1.0,0.0,[],[]], 'autoencoder':[-1.0,0.0,[],[]], 'svd':[-1.0,0.0,[],[]],
-               'cp':[-1.0,0.0,[],[]], 'dct':[-1.0,0.0,[],[]], 'dwt':[-1.0,0.0,[],[]],
-               'ipla':[-1.0,0.0,[],[]], 'paa':[-1.0,0.0,[],[]], 'sax':[-1.0,0.0,[],[]]}
+    # funcOpc = {'pca':[-1.0,0.0,[],[]], 'autoencoder':[-1.0,0.0,[],[]], 'svd':[-1.0,0.0,[],[]],
+    #            'cp':[-1.0,0.0,[],[]], 'dct':[-1.0,0.0,[],[]], 'dwt':[-1.0,0.0,[],[]],
+    #            'ipla':[-1.0,0.0,[],[]], 'paa':[-1.0,0.0,[],[]], 'sax':[-1.0,0.0,[],[]]}
 
-    for x in range(0, 6):
+    funcOpc = {'pca': [-1.0, 0.0, [], []], 'svd': [-1.0, 0.0, [], []],
+               'dct': [-1.0, 0.0, [], []], 'dwt': [-1.0, 0.0, [], []],
+               'ipla': [-1.0, 0.0, [], []], 'paa': [-1.0, 0.0, [], []], 'sax': [-1.0, 0.0, [], []]}
+
+    for x in range(2, 3):
         opc = x
         print("DATASET", opc, ':')
         print("----------")
@@ -286,7 +290,7 @@ if __name__ == '__main__':
         reducedMatrix = None
 
         results_fn = path_data_status + setname + '.function_fractal'
-        f = open(results_fn, 'w')
+        f = open(results_fn, 'a')
         output = [setname, dim, XFractal]
         f.write('\t'.join(map(str, output)) + '\n')
 

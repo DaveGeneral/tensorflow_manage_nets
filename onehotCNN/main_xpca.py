@@ -40,7 +40,7 @@ else:
 # opc = 2
 
 path_data = '../data/onehotCNN/'
-path_data_status = '../data/onehotCNN/saveStatus/'
+path_data_status = 'saveStatus/'
 path_weight = '../weight/onehotCNN/'
 path_load_weight = None
 path_save_weight = path_weight + 'save_ae_mnist.npy'
@@ -177,7 +177,7 @@ def reduce_dimension_function(option, X_train, new_dim):
         cp.shuffle_data()
         # cp.normalize(-1.0, 1.0)
         # cp.standardize()
-        cp.execute_cp(i + 1)
+        cp.execute_cp(new_dim)
         cp.sort_coefficients()
         # cp.save_activations(filename+'_'+str(i+1)+'.csv')
         # cp.save_activations('caract_cp.csv')
@@ -286,7 +286,7 @@ if __name__ == '__main__':
         reducedMatrix = None
 
         results_fn = path_data_status + setname + '.function_fractal'
-        f = open(results_fn, 'a')
+        f = open(results_fn, 'w')
         output = [setname, dim, XFractal]
         f.write('\t'.join(map(str, output)) + '\n')
 
@@ -299,7 +299,7 @@ if __name__ == '__main__':
             for opcF in funcOpc:
 
                 reducedMatrix = reduce_dimension_function(opcF, Xmatrix, l_hidden)
-                dimFractal = getfractal(path, csv_setname, reducedMatrix)
+                dimFractal = getfractal(path, opcF+'_'+csv_setname, reducedMatrix)
                 funcOpc[opcF][0] = funcOpc[opcF][1]
                 funcOpc[opcF][1] = dimFractal
                 #
@@ -309,8 +309,8 @@ if __name__ == '__main__':
                 if abs(funcOpc[opcF][1] - funcOpc[opcF][0]) > ratio_diff:
                     cen_ratio_diff = True
 
-                print("     func:", opcF, l_hidden, funcOpc[opcF][0], funcOpc[opcF][1])
-                output = [setname, l_hidden, funcOpc[opcF][0], funcOpc[opcF][1]]
+                print("     func", opcF+':', l_hidden,'dim_old:', funcOpc[opcF][0], 'dim_new:',funcOpc[opcF][1])
+                output = [setname, opcF, l_hidden, funcOpc[opcF][0], funcOpc[opcF][1]]
                 f.write('\t'.join(map(str, output)) + '\n')
 
             total_time = (time.time() - t0)
@@ -325,9 +325,10 @@ if __name__ == '__main__':
         f.close()
         print('condition: ', (l_hidden < dim_input), cen_ratio_diff)
         print("-------------------------------")
-        print(input())
+        #print(input())
 
     print('Finish Dataset!!!')
     print("-------------------------------")
     print("-------------------------------")
+
 

@@ -38,7 +38,6 @@ class Dataset_csv:
         assert len(path_data) > 0, 'No se ingresaron archivos con los datos de entrada.'
 
         self.path_data = path_data
-        self.minibatch = minibatch
         self.restrict = restrict
 
         # leemos el archivo csv y guardamos las columnas 0 y 1
@@ -66,22 +65,12 @@ class Dataset_csv:
         self.labels = self.data.iloc[:, -1:].astype(int)
         self.total_inputs = len(self.inputs)
 
-        # inicializamos los punteros de la data
+        self.minibatch = 0
         self.start = 0
-        self.end = minibatch
-
-        if self.restrict is True:
-            assert (self.total_inputs / self.minibatch).is_integer(), print('El minibatch debe ser multiplo del total de datos de entrada ', self.total_inputs)
-
-        # Considera solo batch completos
-        self.total_batchs = int(self.total_inputs / self.minibatch)
-
-        # Considera solo batch completos + 1 batch incompleto
-        total_b = self.total_inputs / self.minibatch
-        if (total_b - int(total_b)) > 0:
-            self.total_batchs_complete = int(total_b) + 1
-        else:
-            self.total_batchs_complete = int(total_b)
+        self.end = 0
+        self.total_batchs = 0
+        self.total_batchs_complete = 0
+        self.set_minibatch(minibatch)
 
         # Realizamos un reordenamiento por defecto
         if random is True:
@@ -190,3 +179,24 @@ class Dataset_csv:
 
         self.inputs = df.iloc[:, :-1] / self.amax
         self.labels = df.iloc[:, -1:].astype(int)
+
+    def set_minibatch(self, mbatch):
+
+        self.minibatch = mbatch
+        # inicializamos los punteros de la data
+        self.start = 0
+        self.end = mbatch
+
+        if self.restrict is True:
+            assert (self.total_inputs / mbatch).is_integer(), print('El minibatch debe ser multiplo del total de datos de entrada ', self.total_inputs)
+
+        # Considera solo batch completos
+        self.total_batchs = int(self.total_inputs / mbatch)
+
+        # Considera solo batch completos + 1 batch incompleto
+        total_b = self.total_inputs / mbatch
+        if (total_b - int(total_b)) > 0:
+            self.total_batchs_complete = int(total_b) + 1
+        else:
+            self.total_batchs_complete = int(total_b)
+

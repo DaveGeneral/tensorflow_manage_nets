@@ -616,6 +616,63 @@ def normalization_with_minMax(paths, path_save):
         print('Created data normalized,', path_save)
 
 
+def normalization_complete(sources, has_label=True, no_NaN=True):
+    max_i = []
+    min_i = []
+    for file in sources:
+        with open(file, 'r') as f:
+            reader = csv.reader(f)
+            data = list(reader)
+            max_i.append(np.amax(np.float_(data), axis=0))
+            min_i.append(np.amin(np.float_(data), axis=0))
+
+    # Get Maximo
+    # ----------
+    if has_label is True:
+        maximo = np.amax(max_i, axis=0)[:-1]
+    else:
+        maximo = np.amax(max_i, axis=0)
+
+    myMax = max(maximo)
+    myMin = min(maximo)
+    if myMin == 0.0 and no_NaN == True:
+        maximo[maximo == 0] = 0.0001
+
+    myMin = min(maximo)
+    print("Save max vector, Dim =", str(len(maximo)), ', min =', myMin, ', max =', myMax)
+
+    # Get Minimo
+    # ----------
+    if has_label is True:
+        minimo = np.amin(min_i, axis=0)[:-1]
+    else:
+        minimo = np.amin(min_i, axis=0)
+
+    myMax = max(minimo)
+    myMin = min(minimo)
+    print("Save min vector, Dim =", str(len(minimo)), ', min =', myMin, ', max =', myMax)
+
+    diferencia = maximo - minimo
+
+    for file in sources:
+        with open(file, 'r') as f:
+            reader = csv.reader(f)
+            dataset = list(reader)
+
+            path_save = file[:-4] + '-norm.csv'
+            f = open(path_save, "w")
+            for i in range(len(dataset)):
+                data = np.float_(dataset[i])
+
+                sample = data[:-1]
+                label = data[-1]
+                xi = (sample - minimo) / diferencia
+                # print(",".join(map(str, np.concatenate((xi, [label]), axis=0))))
+                f.write(",".join(map(str, np.concatenate((xi, [label]), axis=0))) + "\n")
+            f.close()
+            print('Created data normalized,', path_save)
+
+
 def load_max_csvData(path_max):
 
     with open(path_max, 'r') as f:

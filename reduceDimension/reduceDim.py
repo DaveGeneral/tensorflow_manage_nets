@@ -2,20 +2,6 @@ import sys, os
 import numpy as np
 from numpy import genfromtxt
 from sklearn import neighbors, datasets, model_selection
-
-from tune_subspace import getfractal
-from tune_subspace import computelshparams
-
-# Add other method here!
-from autoe import AUTOE
-from svd import SVD
-from cp import CP
-from dct import DCT
-from dwt import DWT
-from ipla import IPLA
-from paa import PAA
-from sax import SAX
-
 from sklearn.decomposition import IncrementalPCA
 from sklearn.decomposition import PCA
 
@@ -23,6 +9,18 @@ switch_server = True
 testdir = os.path.dirname('__file__')
 srcdir = '..'
 sys.path.insert(0, os.path.abspath(os.path.join(testdir, srcdir)))
+
+# from onehotCNN.tune_subspace import getfractal
+# from onehotCNN.tune_subspace import computelshparams
+# Add other method here!
+from onehotCNN.autoe import AUTOE
+from onehotCNN.svd import SVD
+from onehotCNN.cp import CP
+from onehotCNN.dct import DCT
+from onehotCNN.dwt import DWT
+from onehotCNN.ipla import IPLA
+from onehotCNN.paa import PAA
+from onehotCNN.sax import SAX
 
 if switch_server is True:
     from tools import utils
@@ -207,24 +205,29 @@ def make_reduce_matrix(path_data, xmethod, dim_optimal, dataname, extraname):
     total_data = len(y_data)
 
     reducedMatrix = reduce_dimension_function(xmethod, X_data, dim_optimal)
-    filename_pca = xpath + dataname + '/' + dataname.lower() + '-' + extraname + '-' + str(dim_optimal) + '.csv'
+    filename_rm = xpath + dataname + '/' + dataname.lower() + '-' + extraname + '-' + xmethod + '-' + str(dim_optimal) + '.csv'
 
-    print('filename_pca:', filename_pca)
-    f = open(filename_pca, "w")
+    print('filename_pca:', filename_rm)
+    f = open(filename_rm, "w")
     for i in range(total_data):
         f.write(",".join(map(str, np.concatenate((reducedMatrix[i], y_data[i]), axis=0))) + "\n")
     f.close()
     print('Save!!')
 
+    return filename_rm
+
 
 if __name__ == '__main__':
 
     opc = 0
-    dim_optimal = 64
+    dim_optimal = 94
 
     path_data_train_csv, path_data_test_csv, path_max_csv, name = path_datasets(opc)
 
-    make_reduce_matrix(path_data_test_csv, 'pca', dim_optimal, name, 'test')
-    make_reduce_matrix(path_data_train_csv, 'pca', dim_optimal, name, 'train')
+    a = make_reduce_matrix(path_data_test_csv[0], 'pca', dim_optimal, name, 'test')
+    b = make_reduce_matrix(path_data_train_csv[0], 'pca', dim_optimal, name, 'train')
+
+    utils.normalization_complete([a, b])
+
 
 

@@ -29,7 +29,7 @@ def path_datasets(opc):
         total = 10000
         path_data_test = [xpath + data_name + '/' + 'mnist-test-800.csv']
         path_data_train = [xpath + data_name + '/' + 'mnist-train-800.csv']
-        path_max = xpath + data_name +'max-mnist.csv'
+        path_max = xpath + data_name + '/' +'max-mnist.csv'
 
     elif opc == 1:
         # CIFAR
@@ -37,7 +37,7 @@ def path_datasets(opc):
         total = 10000
         path_data_test = [xpath + data_name + '/' + 'cifar10-test-4096.csv']
         path_data_train = [xpath + data_name + '/' + 'cifar10-train-4096.csv']
-        path_max = xpath + data_name + 'max-cifar10.csv'
+        path_max = xpath + data_name + '/' + 'max-cifar10.csv'
 
     elif opc == 2:
         # SVHN
@@ -45,15 +45,15 @@ def path_datasets(opc):
         total = 26032
         path_data_test = [xpath + data_name + '/' + 'svhn-test-1152.csv']
         path_data_train = [xpath + data_name + '/' + 'svhn-train-1152.csv']
-        path_max = xpath + data_name + 'max-svhn.csv'
+        path_max = xpath + data_name + '/' + 'max-svhn.csv'
 
     elif opc == 3:
         # AGNews
         data_name = 'AGNEWS'
         total = 7552
-        path_data_test = [xpath + 'output_test_news_8704.csv']
-        path_data_train = [xpath + 'output_train_news_8704.csv']
-        path_max = xpath + data_name + 'max-agnews.csv'
+        path_data_test = [xpath + data_name + '/' + 'agnews-test-8704.csv']
+        path_data_train = [xpath + data_name + '/' + 'agnews-train-8704.csv']
+        path_max = xpath + data_name + '/' + 'max-agnews.csv'
 
     return path_data_train, path_data_test, path_max, data_name
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     path_logs = xpath + 'resultClassifier.csv'
     f = open(path_logs, 'a')
 
-    for i in range(0,4):
+    for i in range(0, 1):
         path_data_train_csv, path_data_test_csv, path_max_csv, name = path_datasets(i)
 
         print('\n[NAME:', name, ']')

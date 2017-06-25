@@ -259,9 +259,8 @@ if __name__ == '__main__':
     #            'cp':[-1.0,0.0,[],[]], 'dct':[-1.0,0.0,[],[]], 'dwt':[-1.0,0.0,[],[]],
     #            'ipla':[-1.0,0.0,[],[]], 'paa':[-1.0,0.0,[],[]], 'sax':[-1.0,0.0,[],[]]}
 
-    funcOpc = {'pca': [-1.0, 0.0, [], []], 'svd': [-1.0, 0.0, [], []],
-               'dct': [-1.0, 0.0, [], []], 'dwt': [-1.0, 0.0, [], []],
-               'ipla': [-1.0, 0.0, [], []], 'paa': [-1.0, 0.0, [], []], 'sax': [-1.0, 0.0, [], []]}
+    funcOpc = {'pca': [-1.0, 0.0, [], []], 'svd': [-1.0, 0.0, [], []], 'dct': [-1.0, 0.0, [], []],
+               'dwt': [-1.0, 0.0, [], []], 'ipla': [-1.0, 0.0, [], []], 'paa': [-1.0, 0.0, [], []]}
 
     for x in range(2, 3):
         opc = x
@@ -292,18 +291,20 @@ if __name__ == '__main__':
         results_fn = path_data_status + setname + '.function_fractal'
         f = open(results_fn, 'a')
         output = [setname, dim, XFractal]
-        f.write('\t'.join(map(str, output)) + '\n')
+        f.write(','.join(map(str, output)) + '\n')
 
         while l_hidden < dim_input and cen_ratio_diff is True:
 
             cen_ratio_diff = False
             print('\n[PRUEBA :', l_hidden, ']')
-            t0 = time.time()
 
             for opcF in funcOpc:
-
+                t0 = time.time()
+                print('     --', opcF, '--')
+                print('     -Dim reduce...')
                 reducedMatrix = reduce_dimension_function(opcF, Xmatrix, l_hidden)
-                dimFractal = getfractal(path, opcF+'_'+csv_setname, reducedMatrix)
+                print('     -Get fractal...')
+                dimFractal = getfractal(path, opcF + '_' + csv_setname, reducedMatrix)
                 funcOpc[opcF][0] = funcOpc[opcF][1]
                 funcOpc[opcF][1] = dimFractal
                 #
@@ -313,23 +314,25 @@ if __name__ == '__main__':
                 if abs(funcOpc[opcF][1] - funcOpc[opcF][0]) > ratio_diff:
                     cen_ratio_diff = True
 
-                print("     func", opcF+':', l_hidden,'dim_old:', funcOpc[opcF][0], 'dim_new:',funcOpc[opcF][1])
-                output = [setname, opcF, l_hidden, funcOpc[opcF][0], funcOpc[opcF][1]]
-                f.write('\t'.join(map(str, output)) + '\n')
+                t1 = time.time() - t0
+                print("     func", opcF + ':', l_hidden, 'dim_old:', funcOpc[opcF][0], 'dim_new:', funcOpc[opcF][1],
+                      'time:', t1)
+                output = [setname, opcF, l_hidden, funcOpc[opcF][0], funcOpc[opcF][1], t1]
+                f.write(','.join(map(str, output)) + '\n')
 
             total_time = (time.time() - t0)
             print("total_time:", total_time)
             l_hidden = l_hidden + int(l_hidden / 2)  # next step
 
         for opcF in funcOpc:
-            f.write('\t'.join(map(str, [setname, opcF])) + '\n')
-            f.write('\t'.join(map(str, funcOpc[opcF][2])) + '\n')
-            f.write('\t'.join(map(str, funcOpc[opcF][3])) + '\n')
+            f.write(','.join(map(str, [setname, opcF])) + '\n')
+            f.write(','.join(map(str, funcOpc[opcF][2])) + '\n')
+            f.write(','.join(map(str, funcOpc[opcF][3])) + '\n')
 
         f.close()
         print('condition: ', (l_hidden < dim_input), cen_ratio_diff)
         print("-------------------------------")
-        #print(input())
+        # print(input())
 
     print('Finish Dataset!!!')
     print("-------------------------------")

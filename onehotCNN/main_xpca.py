@@ -262,7 +262,7 @@ if __name__ == '__main__':
     funcOpc = {'pca': [-1.0, 0.0, [], []], 'svd': [-1.0, 0.0, [], []], 'dct': [-1.0, 0.0, [], []],
                'dwt': [-1.0, 0.0, [], []], 'ipla': [-1.0, 0.0, [], []], 'paa': [-1.0, 0.0, [], []]}
 
-    for x in range(2, 3):
+    for x in range(4, 5):
         opc = x
         print("DATASET", opc, ':')
         print("----------")
@@ -293,7 +293,7 @@ if __name__ == '__main__':
         output = [setname, dim, XFractal]
         f.write(','.join(map(str, output)) + '\n')
 
-        while l_hidden < dim_input and cen_ratio_diff is True:
+        while l_hidden < int(dim_input/2) and cen_ratio_diff is True:
 
             cen_ratio_diff = False
             print('\n[PRUEBA :', l_hidden, ']')
@@ -330,12 +330,13 @@ if __name__ == '__main__':
             f.write(','.join(map(str, funcOpc[opcF][3])) + '\n')
 
         f.close()
-        print('condition: ', (l_hidden < dim_input), cen_ratio_diff)
+        print('condition: ', (l_hidden < int(dim_input/2)), cen_ratio_diff)
         print("-------------------------------")
         # print(input())
 
     print('Finish Dataset!!!')
     print("-------------------------------")
     print("-------------------------------")
+
 
 

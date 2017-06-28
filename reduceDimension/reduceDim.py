@@ -44,6 +44,7 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'mnist-test-800.csv']
         path_data_train = [xpath + data_name + '/' + 'mnist-train-800.csv']
         path_max = xpath + data_name + '/' +'max-mnist.csv'
+        dims = [63,94,141]
 
     elif opc == 1:
         # CIFAR
@@ -52,6 +53,7 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'cifar10-test-4096.csv']
         path_data_train = [xpath + data_name + '/' + 'cifar10-train-4096.csv']
         path_max = xpath + data_name + '/' + 'max-cifar10.csv'
+        dims = [94, 141, 211]
 
     elif opc == 2:
         # SVHN
@@ -60,6 +62,7 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'svhn-test-1152.csv']
         path_data_train = [xpath + data_name + '/' + 'svhn-train-1152.csv']
         path_max = xpath + data_name + '/' + 'max-svhn.csv'
+        dims = [42,63,94]
 
     elif opc == 3:
         # AGNews
@@ -68,8 +71,9 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'agnews-test-8704.csv']
         path_data_train = [xpath + data_name + '/' + 'agnews-train-8704.csv']
         path_max = xpath + data_name + '/' + 'max-agnews.csv'
+        dims = [94, 141, 211]
 
-    return path_data_train, path_data_test, path_max, data_name
+    return path_data_train, path_data_test, path_max, data_name, dims
 
 
 def reduce_dimension_function(option, X_train, new_dim):
@@ -219,15 +223,13 @@ def make_reduce_matrix(path_data, xmethod, dim_optimal, dataname, extraname):
 
 if __name__ == '__main__':
 
-    opc = 0
-    dim_optimal = 94
+    for opc in range(4):
+        path_data_train_csv, path_data_test_csv, path_max_csv, name, dims = path_datasets(opc)
 
-    path_data_train_csv, path_data_test_csv, path_max_csv, name = path_datasets(opc)
-
-    a = make_reduce_matrix(path_data_test_csv[0], 'pca', dim_optimal, name, 'test')
-    b = make_reduce_matrix(path_data_train_csv[0], 'pca', dim_optimal, name, 'train')
-
-    utils.normalization_complete([a, b])
+        for xdim in dims:
+            a = make_reduce_matrix(path_data_test_csv[0], 'pca', xdim, name, 'test')
+            b = make_reduce_matrix(path_data_train_csv[0], 'pca', xdim, name, 'train')
+            utils.normalization_complete([a, b])
 
 
 

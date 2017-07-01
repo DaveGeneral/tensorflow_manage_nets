@@ -92,7 +92,6 @@ def reduce_dimension_function(option, X_train, new_dim):
         return X_reduced
 
     elif option == 'inpca':
-        print('rick')
         n_batches = new_dim
         ipca = IncrementalPCA(n_components=new_dim, batch_size=n_batches)
         ipca.fit(X_train)
@@ -237,7 +236,7 @@ def make_reduce_matrix(path_data, xmethod, dim_optimal, dataname, extraname):
 
 if __name__ == '__main__':
 
-    for opc in range(3, 4):
+    for opc in range(1, 2):
         path_data_train_csv, path_data_test_csv, path_max_csv, name, dims, method = path_datasets(opc)
         print('[', name, ']')
 

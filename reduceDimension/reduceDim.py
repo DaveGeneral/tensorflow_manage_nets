@@ -45,6 +45,7 @@ def path_datasets(opc):
         path_data_train = [xpath + data_name + '/' + 'mnist-train-800.csv']
         path_max = xpath + data_name + '/' +'max-mnist.csv'
         dims = [63,94,141]
+        dims = [28,42]
         method = 'pca'
 
     elif opc == 1:
@@ -55,6 +56,7 @@ def path_datasets(opc):
         path_data_train = [xpath + data_name + '/' + 'cifar10-train-4096.csv']
         path_max = xpath + data_name + '/' + 'max-cifar10.csv'
         dims = [94, 141, 211]
+        dims = [28, 42, 63]
         method = 'pca'
 
     elif opc == 2:
@@ -65,6 +67,7 @@ def path_datasets(opc):
         path_data_train = [xpath + data_name + '/' + 'svhn-train-1152.csv']
         path_max = xpath + data_name + '/' + 'max-svhn.csv'
         dims = [42,63,94]
+        dims = [28]
         method = 'pca'
 
     elif opc == 3:
@@ -74,7 +77,7 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'agnews-test-8704.csv']
         path_data_train = [xpath + data_name + '/' + 'agnews-train-8704.csv']
         path_max = xpath + data_name + '/' + 'max-agnews.csv'
-        dims = [94, 141, 211]
+        dims = [42,63,94,141,211]
         #dims = [141, 211, 316]
         method = 'inpca'
 

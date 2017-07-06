@@ -82,10 +82,10 @@ def get_data_all(path_train, path_test, array_max):
 
 if __name__ == '__main__':
 
-    path_logs = xpath + 'resultClassifierTotal.csv'
+    path_logs = xpath + 'resultClassifierTotalOriginal.csv'
     f = open(path_logs, 'a')
 
-    for i in range(0, 1):
+    for i in range(4):
         path_data_train_csv, path_data_test_csv, path_max_csv, name = path_datasets(i)
 
         print('\n[NAME:', name, ']')
@@ -112,3 +112,4 @@ if __name__ == '__main__':
         f.write(','.join(map(str, Z)) + '\n')
 
     f.close()
+

@@ -33,7 +33,7 @@ def path_datasets(opc):
         path_data_train = [xpath + data_name + '/' + 'mnist-train-800.csv']
         path_max = xpath + data_name + '/' +'max-mnist.csv'
         dims = [63, 94, 141]
-        method = 'pca'
+        method = 'ae2'
 
 
     elif opc == 1:
@@ -44,7 +44,7 @@ def path_datasets(opc):
         path_data_train = [xpath + data_name + '/' + 'cifar10-train-4096.csv']
         path_max = xpath + data_name + '/' + 'max-cifar10.csv'
         dims = [94, 141, 211]
-        method = 'pca'
+        method = 'ae2'
 
     elif opc == 2:
         # SVHN
@@ -54,7 +54,7 @@ def path_datasets(opc):
         path_data_train = [xpath + data_name + '/' + 'svhn-train-1152.csv']
         path_max = xpath + data_name + '/' + 'max-svhn.csv'
         dims = [42, 63, 94]
-        method = 'pca'
+        method = 'ae2'
 
     elif opc == 3:
         # AGNews
@@ -65,7 +65,7 @@ def path_datasets(opc):
         path_max = xpath + data_name + '/' + 'max-agnews.csv'
         dims = [94, 141, 211]
         # dims = [141, 211, 316]
-        method = 'inpca'
+        method = 'ae2'
 
     return path_data_train, path_data_test, path_max, data_name, dims, method
 
@@ -96,14 +96,14 @@ if __name__ == '__main__':
     path_logs = xpath + 'resultClassifierTotal.csv'
     f = open(path_logs, 'a')
 
-    for i in range(2, 3):
+    for i in range(3, 4):
         path_data_train_csv, path_data_test_csv, path_max_csv, name, dims, method = path_datasets(i)
 
         print('\n[NAME:', name, ']')
         for xdim in dims:
 
-            path_reduce_train = xpath + name + '/' + name.lower() + '-train-' + method + '-' + str(xdim) + '-norm.csv'
-            path_reduce_test = xpath + name + '/' + name.lower() + '-test-' + method + '-' + str(xdim) + '-norm.csv'
+            path_reduce_train = xpath + name + '/output_' + name.lower() + '-train-' + method + '-' + str(xdim) + '-norm.csv'
+            path_reduce_test = xpath + name + '/output_' + name.lower() + '-test-' + method + '-' + str(xdim) + '-norm.csv'
             print('     Dim:', xdim)
             print('     ', path_reduce_train)
             print('     ', path_reduce_test)
@@ -118,9 +118,9 @@ if __name__ == '__main__':
             acc = utils.metrics_multiclass(y_test, Z)
 
             print('     Save result...')
-            output = [name, total_test, acc, path_data_test_csv, xdim, method]
+            output = [name, total_test, acc, path_reduce_test, xdim, method]
             f.write(','.join(map(str, output)) + '\n')
-            f.write(','.join(map(str, y_test)) + '\n')
-            f.write(','.join(map(str, Z)) + '\n')
-
+            # f.write(','.join(map(str, y_test)) + '\n')
+            # f.write(','.join(map(str, Z)) + '\n')
     f.close()
+

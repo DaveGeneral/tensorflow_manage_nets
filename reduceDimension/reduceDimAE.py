@@ -35,7 +35,8 @@ def path_datasets(opc):
         path_data_train = [xpath + data_name + '/' + 'mnist-train-800.csv']
         path_max = xpath + data_name + '/' + 'max-mnist.csv'
         # dims = [63, 94, 141]
-        dims = [63]
+        #dims = [63, 94, 141, 211, 316]
+        dims = [28, 42]
         origDim = 800
         method = 'pca'
 
@@ -46,7 +47,8 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'cifar10-test-4096.csv']
         path_data_train = [xpath + data_name + '/' + 'cifar10-train-4096.csv']
         path_max = xpath + data_name + '/' + 'max-cifar10.csv'
-        dims = [94, 141, 211]
+        dims = [94, 141, 211, 316, 474]
+        dims = [28, 42, 63]
         origDim = 4096
         method = 'pca'
 
@@ -57,7 +59,8 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'svhn-test-1152.csv']
         path_data_train = [xpath + data_name + '/' + 'svhn-train-1152.csv']
         path_max = xpath + data_name + '/' + 'max-svhn.csv'
-        dims = [42, 63, 94]
+        dims = [42, 63, 94, 141, 211]
+        dims = [28, 42]
         origDim = 1152
         method = 'pca'
 
@@ -70,6 +73,8 @@ def path_datasets(opc):
         path_max = xpath + data_name + '/' + 'max-agnews.csv'
         dims = [94, 141, 211]
         # dims = [141, 211, 316]
+        #dims = [42, 63,94,141]
+        dims = [28]
         origDim = 8704
         method = 'inpca'
 
@@ -83,50 +88,37 @@ def get_data_all(path_data, array_max):
 
     return X_data, y_data, len(y_data)
 
-#
-# def make_reduce_matrix(path_data, xmethod, dim_optimal, dataname, extraname):
-#     matrix = genfromtxt(path_data, delimiter=',')
-#     shape = np.shape(matrix)
-#
-#     X_data = matrix[:, :shape[1] - 1]
-#     y_data = matrix[:, -1:]
-#     total_data = len(y_data)
-#
-#     reducedMatrix = reduce_dimension_function(xmethod, X_data, dim_optimal)
-#     filename_rm = xpath + dataname + '/' + dataname.lower() + '-' + extraname + '-' + xmethod + '-' + str(
-#         dim_optimal) + '.csv'
-#
-#     print('filename_pca:', filename_rm)
-#     f = open(filename_rm, "w")
-#     for i in range(total_data):
-#         f.write(",".join(map(str, np.concatenate((reducedMatrix[i], y_data[i]), axis=0))) + "\n")
-#     f.close()
-#     print('Save!!')
-#
-#     return filename_rm
-
 
 # Función, fase de test
 def test_model(net, sess_test, objData):
-
     total = objData.total_inputs
     cost_total = 0
 
     for i in range(objData.total_batchs_complete):
-
         x_, label = objData.generate_batch()
         cost = sess_test.run(net.cost, feed_dict={x_batch: x_})
         cost_total = cost_total + cost
         objData.next_batch_test()
-    return cost_total, cost_total/total
+    return cost_total, cost_total / total
+
+
+def test_model_save(net, sess_test, objData, xdir, xname):
+    total = objData.total_inputs
+    cost_total = 0
+
+    for i in range(objData.total_batchs_complete):
+        x_, label = objData.generate_batch()
+        cost, layer = sess_test.run([net.cost, net.z], feed_dict={x_batch: x_})
+        utils.save_layer_output(layer, label, name=xname, dir=xdir)
+        cost_total = cost_total + cost
+        objData.next_batch_test()
+    return cost_total, cost_total / total
 
 
 def train_model(net, sess_train, objData, epoch):
-
     print('\n# PHASE: Training model')
     for ep in range(epoch):
         for i in range(objData.total_batchs):
-
             batch, _ = objData.generate_batch()
             sess_train.run(net.train, feed_dict={x_batch: batch})
             objData.next_batch()
@@ -138,34 +130,43 @@ def train_model(net, sess_train, objData, epoch):
 
 if __name__ == '__main__':
 
-    epoch = 15
-    learning_rate = 0.0001
+    epoch = 21
+    learning_rate = 0.00008
 
-    for opc in range(0, 1):
+    for opc in range(3,4):
         path_data_train_csv, path_data_test_csv, path_max_csv, name, dims, method, origDim = path_datasets(opc)
         Damax = utils.load_max_csvData(path_max_csv)
 
-        data_train = Dataset_csv(path_data=path_data_train_csv, minibatch=50, max_value=Damax)
-        #data_test = Dataset_csv(path_data=path_data_test_csv, minibatch=50, max_value=Damax, restrict=False, random=False)
+        data_train = Dataset_csv(path_data=path_data_train_csv, minibatch=35, max_value=Damax)
+        # data_test = Dataset_csv(path_data=path_data_test_csv, minibatch=35, max_value=Damax, restrict=False)
         print('[', name, ']')
 
         for xdim in dims:
+            print('     Dim:', xdim)
+
+            pathFile = xpath + name + '/'
 
             with tf.Session() as sess:
-
-                layers = [[int(origDim/2), 'relu'], [xdim, 'relu']]
+                weight = xpath + name + '/' + 'weight-' + str(xdim) + '.npy'
+                layers = [[int(origDim / 2), 'relu'], [xdim, 'relu']]
 
                 x_batch = tf.placeholder(tf.float32, [None, origDim])
-                ae = AE.AEncoder(None, learning_rate=learning_rate)
+                ae = AE.AEncoder(weight, learning_rate=learning_rate)
                 ae.build(x_batch, layers)
                 sess.run(tf.global_variables_initializer())
 
+                # TRAIN AENCODER
                 train_model(ae, sess, data_train, epoch=epoch)
+                ae.save_npy(sess, weight)
 
-            # a = make_reduce_matrix(path_data_test_csv[0], method, xdim, name, 'test')
-            # b = make_reduce_matrix(path_data_train_csv[0], method, xdim, name, 'train')
-            # utils.normalization_complete([a, b])
-
+                # SAVE AENCODER
+                # filenameTest = name.lower() + '-test-ae2-' + str(xdim)
+                # filenameTrain = name.lower() + '-train-ae2-' + str(xdim)
+                # cost_tot, cost_prom = test_model_save(ae, sess, data_train, pathFile, filenameTrain)
+                # print('     TRAIN: Dim', xdim, ': ', cost_tot, ' / ', cost_prom)
+                # cost_tot, cost_prom = test_model_save(ae, sess, data_test, pathFile, filenameTest)
+                # print('     TEST : Dim', xdim, ': ', cost_tot, ' / ', cost_prom)
+                # utils.normalization_complete([pathFile + 'output_' + filenameTest + '.csv', pathFile + 'output_' + filenameTrain + '.csv'])
 
 
 

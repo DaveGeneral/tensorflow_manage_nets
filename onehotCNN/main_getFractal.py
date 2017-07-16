@@ -71,7 +71,8 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'agnews-test-8704.csv']
         path_data_train = [xpath + data_name + '/' + 'agnews-train-8704.csv']
         path_max = xpath + data_name + '/' + 'max-agnews.csv'
-        dims = [28, 42, 63, 94, 141, 211]
+        dims = [28, 42, 63, 94, 141, 211, 316]
+        dims = [316]
         origDim = 8704
         method = 'inpca'
 
@@ -82,7 +83,7 @@ if __name__ == '__main__':
 
     results = xpath + 'resultAE.function_fractal'
     f = open(results, 'a')
-    for x in range(4, 5):
+    for x in range(3, 4):
         opc = x
         path_data_train_csv, path_data_test_csv, path_max_csv, name, dims, method, origDim = path_datasets(opc)
 
@@ -97,7 +98,7 @@ if __name__ == '__main__':
             filenameTest = 'output_' + name.lower() + '-test-ae2-' + str(xdim) + '-norm.csv'
             # filenameTrain = 'output_' + name.lower() + '-train-ae2-' + str(xdim) + '-norm.csv'
 
-            Xmatrix = genfromtxt(filenameTest, delimiter=',')
+            Xmatrix = genfromtxt(pathFile + filenameTest, delimiter=',')
             shape = np.shape(Xmatrix)
             labels = Xmatrix[:, -1:]
             Xmatrix = Xmatrix[:, :shape[1] - 1]
@@ -114,5 +115,3 @@ if __name__ == '__main__':
         f.write(','.join(map(str, dimFractal)) + '\n')
 
     f.close()
-
-

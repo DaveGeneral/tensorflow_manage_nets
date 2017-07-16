@@ -44,8 +44,9 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'mnist-test-800.csv']
         path_data_train = [xpath + data_name + '/' + 'mnist-train-800.csv']
         path_max = xpath + data_name + '/' +'max-mnist.csv'
-        dims = [63,94,141]
-        dims = [28,42]
+        #dims = [63,94,141]
+        dims = [19, 28, 42, 63, 94, 141, 211]
+        dims = [42,94,211]
         method = 'pca'
 
     elif opc == 1:
@@ -55,8 +56,9 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'cifar10-test-4096.csv']
         path_data_train = [xpath + data_name + '/' + 'cifar10-train-4096.csv']
         path_max = xpath + data_name + '/' + 'max-cifar10.csv'
-        dims = [94, 141, 211]
-        dims = [28, 42, 63]
+        #dims = [94, 141, 211]
+        dims = [19, 28, 42, 63, 94, 141, 211]
+        dims = [63, 141, 316]
         method = 'pca'
 
     elif opc == 2:
@@ -66,8 +68,9 @@ def path_datasets(opc):
         path_data_test = [xpath + data_name + '/' + 'svhn-test-1152.csv']
         path_data_train = [xpath + data_name + '/' + 'svhn-train-1152.csv']
         path_max = xpath + data_name + '/' + 'max-svhn.csv'
-        dims = [42,63,94]
-        dims = [28]
+        #dims = [42,63,94]
+        dims = [19, 28, 42, 63, 94, 141, 211]
+        dims = [28, 63, 141]
         method = 'pca'
 
     elif opc == 3:
@@ -87,7 +90,6 @@ def path_datasets(opc):
 def reduce_dimension_function(option, X_train, new_dim):
 
     if option == 'pca':
-        n_batches = 10
         pca = PCA(n_components=new_dim)
         pca.fit(X_train)
         X_reduced = pca.transform(X_train)
@@ -237,15 +239,61 @@ def make_reduce_matrix(path_data, xmethod, dim_optimal, dataname, extraname):
     return filename_rm
 
 
+def make_reduce_matrix_total(path_data_test, path_data_train, xmethod, dim_optimal, dataname):
+
+    matrix = genfromtxt(path_data_test, delimiter=',')
+    shape = np.shape(matrix)
+
+    X_data_test = matrix[:, :shape[1] - 1]
+    y_data_test = matrix[:, -1:]
+    total_data_test = len(y_data_test)
+
+    matrix = genfromtxt(path_data_train, delimiter=',')
+    shape = np.shape(matrix)
+
+    X_data_train = matrix[:, :shape[1] - 1]
+    y_data_train = matrix[:, -1:]
+    total_data_train = len(y_data_train)
+
+    data_total = np.concatenate([X_data_test, X_data_train])
+    print('     data reduce...')
+    print('    ', np.shape(data_total))
+    reducedMatrix = reduce_dimension_function(xmethod, data_total, dim_optimal)
+    reducedData = np.vsplit(reducedMatrix, [0, total_data_test])
+
+    # DATA TEST
+    filename_test = xpath + dataname + '/' + dataname.lower() + '-test-' + xmethod + '-' + str(dim_optimal) + '.csv'
+    print('filename_pca:', filename_test)
+    print('     ', np.shape(reducedData[1]))
+    f = open(filename_test, "w")
+    for i in range(total_data_test):
+        f.write(",".join(map(str, np.concatenate((reducedData[1][i], y_data_test[i]), axis=0))) + "\n")
+    f.close()
+    print('     Save Test!')
+
+    # DATA TRAIN
+    filename_train = xpath + dataname + '/' + dataname.lower() + '-train-' + xmethod + '-' + str(dim_optimal) + '.csv'
+    print('filename_pca:', filename_train)
+    print('     ', np.shape(reducedData[2]))
+    f = open(filename_train, "w")
+    for i in range(total_data_train):
+        f.write(",".join(map(str, np.concatenate((reducedData[2][i], y_data_train[i]), axis=0))) + "\n")
+    f.close()
+    print('     Save Train!')
+    print('SAVE END')
+
+    return filename_test, filename_train
+
+
 if __name__ == '__main__':
 
-    for opc in range(1, 2):
+    for opc in range(3):
         path_data_train_csv, path_data_test_csv, path_max_csv, name, dims, method = path_datasets(opc)
         print('[', name, ']')
 
         for xdim in dims:
-            a = make_reduce_matrix(path_data_test_csv[0], method, xdim, name, 'test')
-            b = make_reduce_matrix(path_data_train_csv[0], method, xdim, name, 'train')
+            print('     DIM:', xdim)
+            a, b = make_reduce_matrix_total(path_data_test_csv[0], path_data_train_csv[0], method, xdim, name)
             utils.normalization_complete([a, b])
 
 

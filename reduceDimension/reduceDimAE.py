@@ -137,8 +137,8 @@ if __name__ == '__main__':
         path_data_train_csv, path_data_test_csv, path_max_csv, name, dims, method, origDim = path_datasets(opc)
         Damax = utils.load_max_csvData(path_max_csv)
 
-        data_train = Dataset_csv(path_data=path_data_train_csv, minibatch=35, max_value=Damax)
-        # data_test = Dataset_csv(path_data=path_data_test_csv, minibatch=35, max_value=Damax, restrict=False)
+        data_train = Dataset_csv(path_data=path_data_train_csv, minibatch=35, max_value=Damax, random=False)
+        # data_test = Dataset_csv(path_data=path_data_test_csv, minibatch=35, max_value=Damax, restrict=False, random=False)
         print('[', name, ']')
 
         for xdim in dims:

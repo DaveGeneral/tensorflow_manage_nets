@@ -24,7 +24,7 @@ else:
 # LECTURA DE DATOS
 def load_svhn_data(data_type, data_set_name):
     # TODO add error handling here
-    path = "../../data/SVHN/" + data_set_name
+    path = "../../SVHN/data/svhn/" + data_set_name
     imgs = np.load(os.path.join(path, data_set_name+'_'+data_type+'_imgs.npy'))
     labels = np.load(os.path.join(path, data_set_name+'_'+data_type+'_labels.npy'))
     return imgs, labels
@@ -55,21 +55,24 @@ def fill_feed_dict(data, labels, step, batch_size):
 def test_model(net, sess_test, objData, objLabel, size):
 
     total_acc = 0
+    total_loss= 0
     total_itera = int(np.ceil(size/net.minibatch))
     for step in range(total_itera):
         x, y = fill_feed_dict(objData, objLabel, step, net.minibatch)
 
-        accuracy, layer = sess_test.run([net.accuracy, net.pool3], feed_dict={svhn_batch: x, svhn_label: y, train_mode: False})
-
+        accuracy, layer, loss = sess_test.run([net.accuracy, net.pool3, net.loss], feed_dict={svhn_batch: x, svhn_label: y, train_mode: False})
+        layer = np.around(layer)
         # save output of a layer
         # print(step)
-        # utils.save_layer_output(layer, np.argmax(y, axis=1), name='train_SVHN', dir='../data/SVHN_data/train1152/')
+        utils.save_layer_output(layer, np.argmax(y, axis=1), name='train_SVHN', dir='../data/SVHN_data/train1152/')
         # utils.save_layer_output_by_class(layer, np.argmax(y, axis=1), name='train_SVHN', dir='../data/SVHN_data/train1152/')
 
         total_acc = total_acc + accuracy
+        total_loss = total_loss + loss
 
     acc = total_acc / total_itera
-    print('Test Accuracy: %.5f%%' % acc)
+    xloss = total_loss / total_itera
+    print('Test Accuracy: %.5f%%' % acc, '- Test Loss: %.5f%%' % xloss)
 
 
 # Funcion, fase de entrenamiento
@@ -101,8 +104,8 @@ if __name__ == '__main__':
 
     # Ultimas capas de la red
     num_class = 10
-    epoch = 2
-    learning_rate = 0.075
+    epoch = 10
+    learning_rate = 0.0015
 
     # GENERATE DATA
     data_train, labels_train = load_svhn_data("train", "cropped")
@@ -131,7 +134,8 @@ if __name__ == '__main__':
 
         # # Execute Network
         test_model(net=svhn, sess_test=sess, objData=data_test, objLabel=labels_test, size=svhn.test_size)
-        train_model(net=svhn, sess_train=sess, objData=data_train, objLabel=labels_train, epoch=epoch, xtime=start_time)
-        test_model(net=svhn, sess_test=sess, objData=data_test, objLabel=labels_test, size=svhn.test_size)
+        # train_model(net=svhn, sess_train=sess, objData=data_train, objLabel=labels_train, epoch=epoch, xtime=start_time)
+        # test_model(net=svhn, sess_test=sess, objData=data_test, objLabel=labels_test, size=svhn.test_size)
 
-        svhn.save_npy(sess, path_save_weight)
+        # svhn.save_npy(sess, path_save_weight)
+

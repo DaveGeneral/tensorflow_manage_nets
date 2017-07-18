@@ -60,10 +60,10 @@ class SVHN_NET:
         self.pool3 = tf.cond(train_mode, lambda: tf.nn.dropout(self.pool3, self.dropout), lambda: self.pool3)
         #self.fc1 = tf.reshape(self.pool3, [shape[0], -1])
 
-        self.fc1 = self.fc_layer(self.pool3, 1152, 160, "fc1", bias=0.05)
-        self.relu1 = tf.nn.relu(self.fc1)
+        self.fc1 = self.fc_layer_sigmoid(self.pool3, 1152, 64, "fc1", load_weight_force=False, bias=0.05)
+        #self.relu1 = tf.nn.relu(self.fc1)
 
-        self.logits = self.fc_layer(self.relu1, 160, 10, "fc2", bias=0.05)
+        self.logits = self.fc_layer(self.fc1, 64, 10, "fc2", load_weight_force=False, bias=0.05)
 
         self.prob = tf.nn.softmax(self.logits)
         self.prediction = tf.equal(tf.argmax(self.prob, 1), tf.argmax(input_label, 1))
@@ -151,9 +151,9 @@ class SVHN_NET:
             return fc
 
     # Layer Sigmoid
-    def fc_layer_sigmoid(self, bottom, in_size, out_size, name, load_weight_force=True):
+    def fc_layer_sigmoid(self, bottom, in_size, out_size, name, load_weight_force=True, bias=0.0):
         with tf.variable_scope(name):
-            weights, biases = self.get_fc_var(in_size, out_size, name, load_weight_force)
+            weights, biases = self.get_fc_var(in_size, out_size, name, load_weight_force, bias)
 
             x = tf.reshape(bottom, [-1, in_size])
             fc = tf.nn.sigmoid(tf.matmul(x, weights) + biases)
@@ -204,4 +204,5 @@ class SVHN_NET:
         np.save(npy_path, data_dict)
         print("File saved", npy_path)
         return npy_path
+
 
